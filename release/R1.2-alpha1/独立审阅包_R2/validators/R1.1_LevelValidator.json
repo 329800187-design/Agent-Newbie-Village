@@ -1,0 +1,13 @@
+{
+  "sourceSha256": "6a5204e5de03db07b43858ed24b0d00c6476d2411f1d9e41a16f8ff63b188b82",
+  "generatedAt": "2026-07-22T18:52:11Z",
+  "errors": [],
+  "warnings": [],
+  "summary": {
+    "totalLevels": 74,
+    "coreCount": 70,
+    "optionalCount": 4,
+    "worldCount": 8,
+    "bossCount": 8
+  }
+}

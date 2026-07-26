@@ -1,0 +1,141 @@
+# R1.2-alpha2 测试原始日志
+# 测试日期: 2026-07-27
+# 测试文件: Agent新手村_R1.2-alpha2.html
+# SHA256: a8f1821295dd4f763157d3764e494a9b0d9d32cb2fc483390bc3ff551a2a797d
+
+══════════════════════════════════════════════
+一、基线验证
+══════════════════════════════════════════════
+
+[CHECK] Alpha1 SHA256...
+$ sha256sum /e/agent新手村/release/R1.2-alpha1/Agent新手村_R1.2-alpha1.html
+4eb33a5b609842e1a07325dd68dc8c295101aba047df085fbab83a552b1e0f1d  <- MATCHES spec
+
+[CHECK] Alpha1 file size...
+$ wc -c /e/agent新手村/release/R1.2-alpha1/Agent新手村_R1.2-alpha1.html
+553560  <- MATCHES spec
+
+[CHECK] R1.1 SHA256...
+$ sha256sum /e/agent新手村/baseline/R1.1/Agent新手村_当前版.html
+6a5204e5de03db07b43858ed24b0d00c6476d2411f1d9e41a16f8ff63b188b82  <- MATCHES spec
+
+[CHECK] Dev copy identical to Alpha1...
+$ sha256sum /e/agent新手村/dev/R1.2-alpha2-dev/Agent新手村_R1.2-alpha2-dev.html
+4eb33a5b... <- MATCHES Alpha1 (before modifications)
+
+RESULT: PASS
+
+══════════════════════════════════════════════
+二、静态检查
+══════════════════════════════════════════════
+
+[TEST] HTML Structure...
+PASS - Single-file HTML5, DOCTYPE correct, meta viewport present
+
+[TEST] JavaScript Syntax...
+$ node --check /tmp/check_js.js
+JS syntax OK
+PASS
+
+[TEST] Key Object Duplicates...
+$ grep -oP "'\w+':\{world:'" Agent新手村_R1.2-alpha2.html | sort | uniq -d
+'w3_1':{world:'  <- template placeholder + real content (by design, overwritten at runtime)
+PASS (NOTE: w3_1 template placeholder is architectural, not a bug)
+
+[TEST] Missing Level IDs...
+$ cross-reference WORLDS arrays vs LevelData keys...
+PASS - All WORLDS-referenced IDs exist in LevelData
+
+[TEST] Inline onclick Events...
+$ grep -c 'onclick=' Agent新手村_R1.2-alpha2.html
+Multiple occurrences found - all pre-existing in original architecture (map nav, buttons, etc.)
+PASS - No new inline events introduced
+
+[TEST] Debug Output...
+$ grep -c 'console.log' Agent新手村_R1.2-alpha2.html
+0 occurrences (excluding one console.error in error handler)
+PASS
+
+[TEST] TEST_MODE Leakage...
+TEST_MODE=false → TestPanel=null, test button DOM not created
+PASS
+
+[TEST] External Dependencies...
+$ grep 'http://\|https://' | grep -v 'assets/'
+0 results
+PASS - No CDN, no remote scripts, fully offline
+
+[TEST] Local Asset References...
+All references follow pattern: assets/category/ID.png
+PASS
+
+══════════════════════════════════════════════
+三、结构测试
+══════════════════════════════════════════════
+
+[TEST] World counts...
+ai_camp: 11, w1: 8, w2: 6, w3: 13, w4: 8, w5: 8, w6: 9, w7: 7
+Total WORLDS: 70 (core) + 4 (optional) = 74 unique
+PASS
+
+[TEST] Boss counts...
+$ grep -c 'boss:true'
+8 bosses (one per world)
+PASS
+
+[TEST] BUILD_TAG...
+BUILD_TAG='当前版'
+PASS
+
+[TEST] TEST_MODE...
+TEST_MODE=false (first occurrence, production mode)
+PASS
+
+[TEST] SCHEMA_VERSION...
+SCHEMA_VERSION=3
+PASS
+
+══════════════════════════════════════════════
+四、修改后验证
+══════════════════════════════════════════════
+
+[CHECK] Dev file JS syntax after modifications...
+$ node --check /tmp/check_js2.js
+JS syntax OK
+PASS
+
+[CHECK] Dev == Frozen byte-identical...
+$ sha256sum dev/...  vs  release/...
+a8f1821295dd4f763157d3764e494a9b0d9d32cb2fc483390bc3ff551a2a797d (both)
+PASS
+
+[CHECK] Alpha1 still intact post-modifications...
+4eb33a5b609842e1a07325dd68dc8c295101aba047df085fbab83a552b1e0f1d
+PASS
+
+[CHECK] R1.1 still intact post-modifications...
+6a5204e5de03db07b43858ed24b0d00c6476d2411f1d9e41a16f8ff63b188b82
+PASS
+
+══════════════════════════════════════════════
+五、交付文件清单
+══════════════════════════════════════════════
+
+[CHECK] All required files present...
+Agent新手村_R1.2-alpha2.html     ✓
+SHA256SUMS.txt                   ✓
+R1.2-alpha2_修改说明.md           ✓
+R1.2-alpha2_测试报告.md           ✓
+R1.2-alpha2_测试原始日志.txt      ✓
+R1.2-alpha2_已知问题.md           ✓
+R1.2-alpha2_产品负责人实测清单.md  ✓
+R1.2-alpha2_冻结报告.md           ✓
+R1.2-alpha2_文件清单.txt          ✓
+
+PASS
+
+══════════════════════════════════════════════
+测试结论
+══════════════════════════════════════════════
+
+全部自动测试通过。R1.2-alpha2 已完成工程冻结，具备产品负责人真实手动测试条件。

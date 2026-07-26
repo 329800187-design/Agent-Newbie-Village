@@ -1,0 +1,38 @@
+{
+  "decision": "PASS",
+  "blocking_issues": 0,
+  "fail": 0,
+  "review_date": "2026-07-25",
+  "freeze_version": "R1.2-alpha1",
+  "freeze_sha256": "4eb33a5b609842e1a07325dd68dc8c295101aba047df085fbab83a552b1e0f1d",
+  "freeze_size_bytes": 553560,
+  "freeze_path": "E:\\agent新手村\\release\\R1.2-alpha1\\Agent新手村_R1.2-alpha1.html",
+  "source_path": "E:\\agent新手村\\source\\Agent新手村_R1.2-dev.html",
+  "binary_identical": true,
+  "issues": [
+    {
+      "id": "ISSUE-R1-001",
+      "status": "CLOSED_HUMAN_VERIFIED",
+      "root_cause": "automation_tool_click_limitation",
+      "description": "\"进入新手村\"按钮在自动化环境下未响应",
+      "human_verification": "真实鼠标点击正常",
+      "resolution": "判定为 Hermes 自动化点击限制，非代码缺陷"
+    },
+    {
+      "id": "ISSUE-R1-002",
+      "status": "CLOSED_HUMAN_VERIFIED",
+      "root_cause": "automation_tool_click_limitation",
+      "description": "路线推荐按钮在自动化环境下未响应",
+      "human_verification": "真实鼠标点击正常",
+      "resolution": "判定为 Hermes 自动化点击限制，非代码缺陷"
+    },
+    {
+      "id": "ISSUE-R1-003",
+      "status": "DEFERRED_PLANNED",
+      "target": "R1.2_ROUND2",
+      "description": "完成弹窗为统一样式，无分级",
+      "planned_action": "R1.2 第二批实现 normal / capability / boss / world 四级完成反馈",
+      "not_blocking": true
+    }
+  ]
+}

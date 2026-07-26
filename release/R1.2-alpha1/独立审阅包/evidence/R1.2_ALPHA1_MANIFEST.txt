@@ -1,0 +1,37 @@
+# R1.2-alpha1 冻结清单
+# 生成时间: 2026-07-25
+# 冻结版本: R1.2-alpha1
+
+## 冻结文件
+  Agent新手村_R1.2-alpha1.html     SHA256: 4eb33a5b609842e1a07325dd68dc8c295101aba047df085fbab83a552b1e0f1d
+                                    Size:   553,560 bytes
+
+## 证据文件
+  R1.2_ALPHA1_SHA256SUMS.txt        冻结 SHA256 校验文件
+  R1.2_ALPHA1_MANIFEST.txt          本文件 — 冻结清单
+  R1.2_ALPHA1_SIGNOFF.md            冻结签字文件
+  R1.2_ALPHA1_TEST_SUMMARY.md       验收测试摘要
+  R1.2_ALPHA1_KNOWN_GAPS.md         已知差距
+
+## 审阅报告
+  reports/R1.2_VISUAL_REVIEW_ROUND1_FINAL.md   最终审阅报告
+  reports/R1.2_VISUAL_ISSUES_ROUND1_FINAL.json  审阅 Issue 状态
+
+## 目录结构
+  R1.2-alpha1/
+  ├── Agent新手村_R1.2-alpha1.html      — 冻结 HTML（不可变）
+  ├── R1.2_ALPHA1_SHA256SUMS.txt         — 校验文件
+  ├── R1.2_ALPHA1_MANIFEST.txt           — 本文件
+  ├── R1.2_ALPHA1_SIGNOFF.md             — 签字文件
+  ├── R1.2_ALPHA1_TEST_SUMMARY.md        — 验收摘要
+  ├── R1.2_ALPHA1_KNOWN_GAPS.md          — 已知差距
+  ├── reports/                           — 审阅报告目录
+  │   ├── R1.2_VISUAL_REVIEW_ROUND1_FINAL.md
+  │   └── R1.2_VISUAL_ISSUES_ROUND1_FINAL.json
+  └── screenshots/                       — 截图目录（预留）
+
+## 基线关系
+  来源: source/Agent新手村_R1.2-dev.html
+  冻结: release/R1.2-alpha1/Agent新手村_R1.2-alpha1.html
+  二进制一致: ✅ 已通过 cmp 验证
+  后续开发副本: source/Agent新手村_R1.2-round2-dev.html

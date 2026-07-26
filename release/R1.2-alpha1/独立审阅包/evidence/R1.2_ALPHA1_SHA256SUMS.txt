@@ -1,0 +1,6 @@
+# R1.2-alpha1 冻结 SHA256 校验文件
+# 生成时间: 2026-07-25
+# 基线来源: E:\agent新手村\source\Agent新手村_R1.2-dev.html
+# 冻结目录: E:\agent新手村\release\R1.2-alpha1\
+
+4eb33a5b609842e1a07325dd68dc8c295101aba047df085fbab83a552b1e0f1d  Agent新手村_R1.2-alpha1.html

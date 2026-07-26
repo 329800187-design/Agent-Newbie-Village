@@ -1,0 +1,12 @@
+{
+  "name": "agent-village-skeleton-tests",
+  "private": true,
+  "scripts": {
+    "test:runtime": "node tests/test_runtime_assets.js",
+    "test:onboarding": "node tests/test_onboarding.js",
+    "test:browser": "npm run test:runtime && npm run test:onboarding"
+  },
+  "devDependencies": {
+    "playwright-core": "1.61.1"
+  }
+}

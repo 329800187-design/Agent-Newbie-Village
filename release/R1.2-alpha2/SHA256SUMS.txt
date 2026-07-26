@@ -1,0 +1,9 @@
+# R1.2-alpha2 SHA256 Checksums
+# Generated: 2026-07-27
+
+# Primary deliverable
+a8f1821295dd4f763157d3764e494a9b0d9d32cb2fc483390bc3ff551a2a797d  Agent新手村_R1.2-alpha2.html
+
+# Baseline references (DO NOT MODIFY)
+4eb33a5b609842e1a07325dd68dc8c295101aba047df085fbab83a552b1e0f1d  ../R1.2-alpha1/Agent新手村_R1.2-alpha1.html
+6a5204e5de03db07b43858ed24b0d00c6476d2411f1d9e41a16f8ff63b188b82  ../../baseline/R1.1/Agent新手村_当前版.html

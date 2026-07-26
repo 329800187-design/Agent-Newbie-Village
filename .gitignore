@@ -1,0 +1,17 @@
+# Binary archives
+*.rar
+*.zip
+
+# Word docs (large binaries — keep only .md design docs)
+*.docx
+
+# Node
+node_modules/
+package-lock.json
+
+# Workbuddy / IDE
+.workbuddy/
+
+# OS junk
+Thumbs.db
+.DS_Store

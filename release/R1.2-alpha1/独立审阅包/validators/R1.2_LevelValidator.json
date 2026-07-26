@@ -1,0 +1,11 @@
+{
+  "version": "R1.2-alpha1",
+  "level_count": 74,
+  "core_count": 70,
+  "optional_count": 4,
+  "world_count": 8,
+  "course_sha256": "56860b8325375125f0950398fe512ab8fa9795e7087e30fe6bbf5a8f68965895",
+  "payload_chars": 182171,
+  "payload_chars_policy": "informational_only",
+  "discrepancy_note": "R1.1 historical validator records 181315. The current leveldata_hash.js reports 182171 for all four HTML files while the canonical course SHA256 and 74/70/4/8 counts remain identical. Course SHA256 and counts are release gates; payload_chars is auxiliary metadata."
+}

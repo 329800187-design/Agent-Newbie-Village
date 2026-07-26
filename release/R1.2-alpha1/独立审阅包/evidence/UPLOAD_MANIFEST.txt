@@ -1,0 +1,38 @@
+# UPLOAD_MANIFEST — Agent新手村 R1.2-alpha1 独立审阅包 R1
+# 生成时间: 2026-07-26
+# 此清单描述 ZIP 包及其内容
+# 注：此文件位于 ZIP 包内，记录的 ZIP_SHA256 为不含此文件最终版本的近似值。
+# 完整校验请使用 evidence/R1.2_ALPHA1_REVIEW_PACKAGE_SHA256SUMS.txt
+
+ZIP_FILENAME=Agent新手村_R1.2-alpha1_独立审阅包_R1.zip
+ZIP_SIZE_BYTES=686430
+ZIP_SHA256=41d4c69aa8420360f30d1d8374083c13f2ee9f071dca5bfb98af0903cc7477d4
+FILE_COUNT=20
+UNCOMPRESSED_TOTAL_BYTES=2262210
+
+# 条目列表（按路径排序，相对于 ZIP 根）
+baseline/Agent新手村_R1.2-alpha1.html
+baseline/Agent新手村_R1.2-dev.html
+baseline/Agent新手村_R1.2-round2-dev.html
+baseline/R1.1_当前权威版.html
+evidence/R1.2_ALPHA1_KNOWN_GAPS.md
+evidence/R1.2_ALPHA1_MANIFEST.txt
+evidence/R1.2_ALPHA1_REVIEW_PACKAGE_SHA256SUMS.txt
+evidence/R1.2_ALPHA1_SHA256SUMS.txt
+evidence/R1.2_ALPHA1_SIGNOFF.md
+evidence/R1.2_ALPHA1_TEST_SUMMARY.md
+evidence/UPLOAD_MANIFEST.txt
+README.md
+reports/R1.2_VISUAL_ISSUES_ROUND1_FINAL.json
+reports/R1.2_VISUAL_REVIEW_ROUND1_FINAL.md
+scripts/build_release.py
+scripts/leveldata_hash.js
+validators/_leveldata_hash_baseline.json
+validators/R1.1_LevelValidator.json
+validators/R1.2_LevelValidator.json
+verify_package.py
+
+DUPLICATE_PATHS=none
+PATH_TRAVERSAL=none
+ZIP_CRC_CHECK=PASS
+SCREENSHOT_EVIDENCE=人工验证完成，但本批未保存截图（详见 evidence/R1.2_ALPHA1_KNOWN_GAPS.md）
