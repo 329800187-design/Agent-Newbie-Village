@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Agent新手村</title>
+<style>
+/* ========== 全局样式 ========== */
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --node-size:56px;--boss-size:74px;
+  --map-width:420px;
+  --nav-h:68px;
+
+  /* Node colors - universal state colors */
+  --c-current:#58CC02;
+  --c-current-dark:#4AAA01;
+  --c-current-light:#8DDC6A;
+  --c-completed:#1CB0F6;
+  --c-completed-dark:#0A91D4;
+  --c-completed-light:#6FCFF6;
+  --c-locked:#E5E5E5;
+  --c-locked-dark:#D0D0D0;
+  --c-boss:#FF9600;
+  --c-boss-dark:#E08600;
+  --c-boss-light:#FFC066;
+  --c-star:#FFC800;
+  --c-star-dim:#E0D0A0;
+
+  /* Text */
+  --text:#3C3C3C;
+  --text-dim:#A0A0A0;
+  --text-mid:#777;
+  --text-light:#E8E8E8;
+
+  /* UI */
+  --card-bg:#FFFFFF;
+  --shadow-sm:0 2px 6px rgba(0,0,0,.08);
+  --shadow:0 4px 12px rgba(0,0,0,.1);
+  --shadow-lg:0 8px 28px rgba(0,0,0,.15);
+  --shadow-node:0 4px 0 rgba(0,0,0,.12);
+  --radius:20px;
+  --radius-md:14px;
+  --radius-sm:10px;
+}
+html,body{
+  height:100%;overflow:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;
+  background:#F7F9FC;color:var(--text);
+  -webkit-tap-highlight-color:transparent;
+}
+.page{position:fixed;inset:0;display:none}
+.page.active{display:block}
+
+/* ========== 地图页 ========== */
+#map-page{display:flex;flex-direction:column}
+.map-header{
+  position:sticky;top:0;z-index:100;
+  background:#FFFFFF;
+  padding:12px 18px;
+  border-bottom:none;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.map-header h1{
+  font-size:20px;font-weight:800;
+  color:#4B4B4B;letter-spacing:.5px;
+}
+.progress-info{display:flex;gap:8px;font-size:13px;align-items:center}
+.xp-badge{
+  background:#FFF3D6;color:#CE8200;
+  padding:5px 12px;border-radius:20px;font-weight:800;font-size:13px;
+  box-shadow:0 2px 0 #E6CF80;display:flex;align-items:center;gap:4px;
+}
+.star-badge{
+  background:#FFF3D6;color:#CE8200;
+  padding:5px 12px;border-radius:20px;font-weight:800;font-size:13px;
+  box-shadow:0 2px 0 #E6CF80;display:flex;align-items:center;gap:4px;
+}
+
+.map-scroll{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;scrollbar-color:#ccc transparent;
+}
+.map-scroll::-webkit-scrollbar{width:4px}
+.map-scroll::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+
+.map-container{width:var(--map-width);margin:0 auto;position:relative;min-height:100%;padding-bottom:100px}
+
+/* ========== 区域样式 ========== */
+.region{position:relative;padding:0;pointer-events:none;overflow:hidden}
+.region-title{
+  text-align:center;padding:14px 0 8px;
+  font-size:16px;font-weight:800;
+  letter-spacing:1px;
+  position:sticky;top:0;z-index:5;
+}
+.region-title .region-icon{font-size:22px;margin-right:6px}
+.region-divider{text-align:center;padding:6px 0;font-size:12px;color:rgba(0,0,0,.15);letter-spacing:3px}
+
+/* AI启蒙营 - 新手天空岛 */
+.region-ai-camp{background:linear-gradient(180deg,#C8E6F5 0%,#E0F0FA 40%,#E8F4FD 100%)}
+.region-ai-camp .region-title{color:#5C6BC0;background:rgba(200,230,245,.85);backdrop-filter:blur(6px)}
+
+/* W1黑窗口村 - 卡通夜晚村庄 */
+.region-w1{background:linear-gradient(180deg,#2E4260 0%,#3A5278 40%,#2E4260 100%)}
+.region-w1 .region-title{color:#FFD54F;background:rgba(46,66,96,.85);backdrop-filter:blur(6px)}
+
+/* W2代码森林 - 卡通逻辑森林 */
+.region-w2{background:linear-gradient(180deg,#7EC87E 0%,#9BD49B 40%,#6FBB6F 100%)}
+.region-w2 .region-title{color:#2E7D32;background:rgba(126,200,126,.85);backdrop-filter:blur(6px)}
+
+/* 锁定区域 */
+.region-locked{background:linear-gradient(180deg,#D5DEE5 0%,#C0CCD4 100%);padding-bottom:50px}
+.region-locked .region-title{color:#78909C;background:rgba(213,222,229,.85);backdrop-filter:blur(6px)}
+.locked-worlds{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding:0 20px}
+.locked-world-card{
+  background:rgba(255,255,255,.5);border:1.5px solid rgba(0,0,0,.06);
+  border-radius:14px;padding:16px 10px;text-align:center;
+  box-shadow:var(--shadow-sm);
+}
+.locked-world-card .lock{font-size:28px;display:block;margin-bottom:8px;opacity:.4}
+.locked-world-card .name{font-size:13px;color:#666;display:block;margin-bottom:4px;font-weight:600}
+.locked-world-card .ver{font-size:11px;color:#999}
+
+/* ========== 装饰元素 ========== */
+/* 云朵 */
+.deco-cloud{
+  position:absolute;width:60px;height:24px;
+  background:#FFFFFF;border-radius:24px;opacity:.7;
+  pointer-events:none;
+  box-shadow:18px 0 0 -2px #FFFFFF,36px 4px 0 -6px #FFFFFF,-18px 2px 0 -4px #FFFFFF;
+  animation:cloudFloat 18s ease-in-out infinite;
+}
+@keyframes cloudFloat{0%,100%{transform:translateX(0)}50%{transform:translateX(20px)}}
+
+/* 星星闪烁 */
+.deco-sparkle{
+  position:absolute;width:8px;height:8px;pointer-events:none;
+  background:#FFD700;border-radius:50%;opacity:.3;
+  box-shadow:0 0 6px #FFD700;
+  animation:sparkle 3s ease-in-out infinite;
+}
+@keyframes sparkle{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:.8;transform:scale(1.2)}}
+
+/* 窗户灯光 */
+.deco-window{
+  position:absolute;width:14px;height:14px;pointer-events:none;
+  background:#FFD54F;border-radius:3px;opacity:.8;
+  box-shadow:0 0 8px rgba(255,213,79,.6);
+  animation:windowFlicker 4s ease-in-out infinite;
+}
+@keyframes windowFlicker{0%,100%{opacity:.6}50%{opacity:.9}}
+
+/* 绿色终端光 */
+.deco-terminal-glow{
+  position:absolute;width:6px;height:6px;pointer-events:none;
+  background:#66BB6A;border-radius:50%;
+  box-shadow:0 0 8px rgba(102,187,106,.7);
+  animation:termGlow 2.5s ease-in-out infinite;
+}
+@keyframes termGlow{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.3)}}
+
+/* 萤火虫 */
+.deco-firefly{
+  position:absolute;width:5px;height:5px;pointer-events:none;
+  background:#FFEB3B;border-radius:50%;
+  box-shadow:0 0 10px rgba(255,235,59,.8);
+  animation:fireflyMove 6s ease-in-out infinite;
+}
+@keyframes fireflyMove{
+  0%{opacity:0;transform:translate(0,0) scale(.5)}
+  20%{opacity:1;transform:translate(15px,-20px) scale(1)}
+  40%{opacity:.6;transform:translate(30px,-10px) scale(.8)}
+  60%{opacity:1;transform:translate(20px,10px) scale(1)}
+  80%{opacity:.4;transform:translate(5px,20px) scale(.7)}
+  100%{opacity:0;transform:translate(0,0) scale(.5)}
+}
+
+/* 叶子 */
+.deco-leaf{
+  position:absolute;font-size:16px;pointer-events:none;opacity:.5;
+  animation:leafSway 5s ease-in-out infinite;
+  transform-origin:top center;
+}
+@keyframes leafSway{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+
+/* 远方山丘轮廓 */
+.deco-hills{
+  position:absolute;bottom:0;left:0;right:0;height:60px;
+  pointer-events:none;opacity:.3;
+  background:radial-gradient(ellipse 80px 40px at 20% 100%,#999 0%,transparent 70%),
+             radial-gradient(ellipse 100px 50px at 50% 100%,#888 0%,transparent 70%),
+             radial-gradient(ellipse 70px 35px at 80% 100%,#aaa 0%,transparent 70%);
+}
+
+/* ========== SVG路径 ========== */
+.map-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.path-segment{
+  fill:none;stroke:#D0D8DC;stroke-width:5;stroke-linecap:round;
+  stroke-dasharray:0;
+}
+.path-segment.completed{stroke:#FFC800;stroke-width:5}
+
+/* ========== 关卡节点 ========== */
+.nodes-layer{position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.level-node{
+  position:absolute;width:var(--node-size);height:var(--node-size);
+  transform:translate(-50%,-50%);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;font-size:20px;font-weight:800;
+  transition:transform .15s cubic-bezier(.34,1.56,.64,1);
+  user-select:none;pointer-events:auto;
+  border-bottom-width:4px;border-bottom-style:solid;
+}
+.level-node.boss{width:var(--boss-size);height:var(--boss-size);font-size:26px}
+.level-node:hover{transform:translate(-50%,-50%) scale(1.1)}
+.level-node:active{transform:translate(-50%,-50%) scale(.9)}
+
+/* 未解锁 */
+.node-locked{
+  background:var(--c-locked);border-color:var(--c-locked-dark);
+  color:#B0B0B0;cursor:pointer;
+  opacity:.65;
+}
+.node-locked::after{content:'🔒';position:absolute;font-size:18px}
+.node-locked .node-num{display:none}
+
+/* 当前关 */
+.node-current{
+  background:var(--c-current);border-color:var(--c-current-dark);
+  color:#fff;
+  box-shadow:0 0 0 4px rgba(88,204,2,.25);
+  animation:nodeBreathe 2s ease-in-out infinite,nodeFloat 3s ease-in-out infinite;
+}
+.node-current.boss{
+  background:var(--c-boss);border-color:var(--c-boss-dark);
+  box-shadow:0 0 0 4px rgba(255,150,0,.25);
+}
+
+/* 已完成 */
+.node-completed{
+  background:var(--c-completed);border-color:var(--c-completed-dark);
+  color:#fff;
+}
+.node-completed.boss{
+  background:var(--c-boss);border-color:var(--c-boss-dark);
+}
+
+/* Boss图标 */
+.node-boss-icon{position:absolute;font-size:18px;top:-10px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.2))}
+
+/* 星级 */
+.node-stars{
+  position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);
+  display:flex;gap:1px;font-size:11px;
+  background:rgba(255,255,255,.85);padding:2px 6px;border-radius:10px;
+  box-shadow:0 1px 3px rgba(0,0,0,.1);
+}
+.node-stars .star{color:var(--c-star)}
+.node-stars .star.empty{color:#D5D5D5}
+
+/* 节点提示 */
+.node-hint{
+  position:absolute;top:calc(100% + 28px);left:50%;transform:translateX(-50%);
+  white-space:nowrap;font-size:12px;color:var(--c-current-dark);font-weight:800;
+  pointer-events:none;
+  background:#fff;padding:4px 12px;border-radius:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+  animation:hintBounce 1.5s ease-in-out infinite;
+}
+.node-hint::before{
+  content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-bottom-color:#fff;
+}
+
+/* 动画 */
+@keyframes nodeBreathe{0%,100%{box-shadow:0 0 0 4px rgba(88,204,2,.25)}50%{box-shadow:0 0 0 8px rgba(88,204,2,.15)}}
+@keyframes nodeFloat{0%,100%{transform:translate(-50%,-50%)}50%{transform:translate(-50%,calc(-50% - 5px))}}
+@keyframes hintBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(4px)}}
+
+/* ========== 小黑角色 ========== */
+.kuro-on-map{
+  position:absolute;z-index:4;
+  transform:translate(-50%,-50%);
+  transition:left .7s cubic-bezier(.5,1.8,.5,1),top .7s cubic-bezier(.5,1.8,.5,1);
+  pointer-events:none;
+}
+.kuro-char{
+  position:relative;width:40px;height:44px;
+  animation:kuroIdle 2.5s ease-in-out infinite;
+}
+@keyframes kuroIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+.kuro-body{
+  width:36px;height:36px;border-radius:50% 50% 45% 45%;
+  background:linear-gradient(180deg,#555 0%,#333 100%);
+  position:relative;margin:0 auto;top:2px;
+  border:2.5px solid #4CAF50;
+  box-shadow:0 3px 8px rgba(0,0,0,.2);
+}
+.kuro-face{position:relative;display:flex;gap:6px;justify-content:center;padding-top:8px}
+.kuro-eye{
+  width:7px;height:7px;background:#fff;border-radius:50%;
+  position:relative;
+}
+.kuro-eye::after{
+  content:'';position:absolute;width:4px;height:4px;background:#000;
+  border-radius:50%;top:2px;left:2px;
+}
+.kuro-antenna{
+  position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+  width:3px;height:8px;background:#4CAF50;border-radius:3px;
+}
+.kuro-antenna::after{
+  content:'';position:absolute;top:-4px;left:50%;transform:translateX(-50%);
+  width:6px;height:6px;background:#8DDC6A;border-radius:50%;
+  box-shadow:0 0 4px rgba(141,220,106,.6);
+}
+.kuro-shadow{
+  position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);
+  width:28px;height:6px;background:rgba(0,0,0,.15);border-radius:50%;
+  filter:blur(2px);
+}
+
+/* 小黑气泡 */
+.kuro-bubble{
+  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:#fff;color:var(--text);padding:6px 14px;border-radius:14px;
+  font-size:12px;font-weight:700;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(0,0,0,.12);
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.kuro-bubble.show{opacity:1;animation:bubblePop .4s cubic-bezier(.34,1.56,.64,1)}
+.kuro-bubble::after{
+  content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:6px solid transparent;border-top-color:#fff;
+}
+@keyframes bubblePop{0%{transform:translateX(-50%) scale(.5);opacity:0}100%{transform:translateX(-50%) scale(1);opacity:1}}
+
+/* 小黑跳跃（到达后） */
+.kuro-on-map.hopping .kuro-char{animation:kuroHop .4s ease}
+@keyframes kuroHop{0%{transform:translateY(0)}50%{transform:translateY(-14px) scale(1.05)}100%{transform:translateY(0)}}
+
+/* ========== 底部导航 ========== */
+.bottom-nav{
+  position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:100;
+  height:var(--nav-h);background:#FFFFFF;
+  border-radius:20px;
+  box-shadow:0 4px 16px rgba(0,0,0,.1);
+  display:flex;justify-content:space-around;align-items:center;
+  width:100%;max-width:calc(var(--map-width) - 24px);
+  padding:0 8px;
+}
+.nav-btn{
+  background:none;border:none;color:#A0A0A0;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-size:10px;font-weight:700;cursor:pointer;padding:6px 14px;
+  border-radius:14px;transition:all .2s;
+  flex:1;
+}
+.nav-btn .nav-icon{font-size:22px;transition:transform .15s}
+.nav-btn:active .nav-icon{transform:scale(.85)}
+.nav-btn.active{color:var(--c-current)}
+.nav-btn.active .nav-icon{transform:scale(1.1)}
+
+/* ========== 关卡信息卡 ========== */
+.modal-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.35);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  animation:overlayIn .2s ease;
+}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+.modal-overlay.closing{animation:overlayOut .2s ease forwards}
+.modal-overlay.closing .modal-content{animation:modalOut .25s ease forwards}
+@keyframes overlayOut{to{opacity:0}}
+@keyframes modalOut{to{opacity:0;transform:scale(.9) translateY(30px)}}
+
+.modal-content{
+  background:var(--card-bg);border:none;
+  border-radius:24px;padding:28px 22px;max-width:360px;width:100%;
+  box-shadow:var(--shadow-lg);
+  animation:modalIn .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes modalIn{from{opacity:0;transform:scale(.85) translateY(30px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+.modal-content h2{
+  font-size:20px;margin-bottom:18px;text-align:center;font-weight:800;color:#4B4B4B;
+}
+.modal-content.boss h2{color:var(--c-boss-dark)}
+
+.info-section{margin-bottom:14px}
+.info-section strong{font-size:13px;color:var(--text-mid);display:block;margin-bottom:4px;font-weight:700}
+.info-section p{font-size:14px;line-height:1.6;color:var(--text)}
+
+.info-reward{display:flex;gap:10px;font-size:13px}
+.info-reward span{
+  background:#FFF3D6;color:#CE8200;
+  padding:6px 12px;border-radius:12px;font-weight:700;
+}
+
+.modal-buttons{display:flex;gap:10px;margin-top:22px}
+.btn-primary{
+  flex:1;background:var(--c-current);color:#fff;border:none;
+  padding:14px;border-radius:16px;font-size:15px;font-weight:800;cursor:pointer;
+  box-shadow:0 4px 0 var(--c-current-dark);transition:all .1s;
+}
+.btn-primary:hover{filter:brightness(1.05)}
+.btn-primary:active{transform:translateY(2px);box-shadow:0 2px 0 var(--c-current-dark)}
+
+.btn-secondary{
+  flex:1;background:#F0F0F0;color:var(--text-mid);border:none;
+  padding:14px;border-radius:16px;font-size:15px;font-weight:700;cursor:pointer;
+  box-shadow:0 4px 0 #D5D5D5;transition:all .1s;
+}
+.btn-secondary:hover{background:#F5F5F5}
+.btn-secondary:active{transform:translateY(2px);box-shadow:0 2px 0 #D5D5D5}
+
+/* 锁定信息卡 */
+.modal-content.locked-content h2{color:var(--text-dim)}
+.locked-condition{
+  background:#F5F5F5;border-radius:16px;padding:24px 16px;
+  text-align:center;margin-bottom:14px;
+}
+.locked-condition .lock-icon{font-size:40px;display:block;margin-bottom:12px}
+.locked-condition .lock-text{font-size:15px;color:var(--text-mid);font-weight:600}
+.locked-condition .lock-level{
+  font-size:13px;color:var(--text);margin-top:10px;padding:8px 14px;
+  background:#fff;border-radius:12px;display:inline-block;
+  box-shadow:var(--shadow-sm);font-weight:600;
+}
+
+/* ========== 关卡页(占位) ========== */
+#level-page{background:#F7F9FC;overflow-y:auto}
+.level-header{
+  position:sticky;top:0;background:#FFFFFF;
+  padding:14px 18px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+  display:flex;align-items:center;gap:12px;
+}
+.back-btn{
+  background:#F0F0F0;border:none;color:var(--text);
+  font-size:14px;cursor:pointer;padding:8px 16px;border-radius:12px;
+  font-weight:700;transition:background .2s;
+}
+.back-btn:hover{background:#E5E5E5}
+.back-btn:active{transform:scale(.95)}
+.level-header h2{font-size:17px;font-weight:800;color:#4B4B4B}
+.level-content{
+  padding:60px 24px;text-align:center;color:var(--text-mid);max-width:400px;margin:0 auto;
+}
+.level-content .placeholder-icon{font-size:64px;margin-bottom:20px;animation:placeholderBob 2s ease-in-out infinite}
+@keyframes placeholderBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.level-content p{font-size:15px;line-height:1.7;margin-bottom:10px}
+
+/* ========== 调试面板 ========== */
+.debug-toggle{
+  position:fixed;top:56px;right:16px;z-index:150;
+  width:40px;height:40px;border-radius:50%;
+  background:#FFFFFF;border:2px solid #E0E0E0;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:18px;transition:all .2s;
+  box-shadow:var(--shadow-sm);
+}
+.debug-toggle:hover{transform:scale(1.1);box-shadow:var(--shadow)}
+.debug-toggle:active{transform:scale(.9)}
+
+.debug-panel{
+  position:fixed;top:100px;right:16px;z-index:150;
+  width:210px;background:#FFFFFF;border:none;
+  border-radius:16px;padding:14px;
+  box-shadow:var(--shadow-lg);
+  display:flex;flex-direction:column;gap:8px;
+}
+.debug-panel h3{font-size:13px;color:var(--text-dim);margin-bottom:2px;font-weight:700}
+.debug-panel button{
+  background:#F5F5F5;border:none;
+  color:var(--text);padding:10px 12px;border-radius:12px;
+  font-size:13px;cursor:pointer;text-align:left;transition:all .15s;
+  font-weight:600;box-shadow:0 2px 0 #E0E0E0;
+}
+.debug-panel button:hover{background:#EFEFEF}
+.debug-panel button:active{transform:translateY(1px);box-shadow:0 1px 0 #E0E0E0}
+
+/* 自定义调试下拉 */
+.debug-dropdown{position:relative;width:100%}
+.debug-dropdown-btn{
+  width:100%;background:#F5F5F5;border:none;
+  color:var(--text);padding:10px 12px;border-radius:12px;font-size:13px;cursor:pointer;
+  text-align:left;display:flex;justify-content:space-between;align-items:center;
+  font-weight:600;box-shadow:0 2px 0 #E0E0E0;
+}
+.debug-dropdown-btn:active{transform:translateY(1px);box-shadow:0 1px 0 #E0E0E0}
+.debug-dropdown-btn::after{content:'▼';font-size:10px;margin-left:6px;color:#999}
+.debug-dropdown-list{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:160;
+  max-height:200px;overflow-y:auto;background:#FFFFFF;border:1px solid #E5E5E5;
+  border-radius:12px;box-shadow:var(--shadow-lg);animation:dropdownIn .15s ease;
+}
+@keyframes dropdownIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.debug-dropdown-item{
+  padding:8px 12px;font-size:12px;color:var(--text);cursor:pointer;
+  border-bottom:1px solid #F0F0F0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-weight:500;
+}
+.debug-dropdown-item:last-child{border-bottom:none}
+.debug-dropdown-item:hover{background:#F5F5F5}
+.debug-dropdown-item.active{background:#E8F5E9;color:var(--c-current-dark);font-weight:700}
+
+#debug-state-view{
+  background:#F5F5F5;border:1px solid #E5E5E5;border-radius:10px;
+  padding:10px;font-size:10px;color:#666;max-height:200px;overflow:auto;
+  white-space:pre-wrap;word-break:break-all;
+}
+
+/* ========== Toast ========== */
+.toast{
+  position:fixed;bottom:calc(var(--nav-h) + 24px);left:50%;
+  transform:translateX(-50%);z-index:300;
+  background:#FFFFFF;color:var(--text);
+  padding:12px 24px;border-radius:20px;
+  font-size:14px;font-weight:700;
+  box-shadow:var(--shadow-lg);
+  animation:toastIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(15px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ========== 节点点亮动画 ========== */
+@keyframes nodeLightUp{
+  0%{box-shadow:0 0 0 4px rgba(88,204,2,.25)}
+  30%{box-shadow:0 0 0 12px rgba(88,204,2,.3),0 0 30px rgba(88,204,2,.5);transform:translate(-50%,-50%) scale(1.3)}
+  60%{box-shadow:0 0 0 20px rgba(28,176,246,0),0 0 20px rgba(28,176,246,.3)}
+  100%{box-shadow:0 0 0 4px rgba(28,176,246,.2);transform:translate(-50%,-50%) scale(1)}
+}
+.level-node.lighting-up{animation:nodeLightUp .6s ease!important}
+
+/* 星星落下 */
+@keyframes starFall{
+  0%{opacity:0;transform:translateY(-20px) scale(0) rotate(-45deg)}
+  60%{opacity:1;transform:translateY(0) scale(1.3) rotate(10deg)}
+  100%{opacity:1;transform:translateY(0) scale(1) rotate(0)}
+}
+.node-stars .star.falling{animation:starFall .4s ease forwards}
+
+/* XP动画 */
+.xp-badge{position:relative;transition:transform .2s}
+.xp-badge.bumping{animation:xpBump .5s ease}
+@keyframes xpBump{0%,100%{transform:scale(1)}40%{transform:scale(1.3);background:#FFE082}}
+.xp-gain-float{
+  position:absolute;left:50%;top:-8px;
+  font-size:14px;font-weight:800;color:#CE8200;
+  pointer-events:none;animation:xpFloat 1.2s ease forwards;
+  white-space:nowrap;
+}
+@keyframes xpFloat{0%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-35px)}}
+
+/* ========== 认证弹窗 ========== */
+.cert-overlay{
+  position:fixed;inset:0;z-index:250;
+  background:rgba(0,0,0,.5);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  animation:overlayIn .3s ease;
+}
+.cert-card{
+  background:#FFFFFF;border-radius:24px;
+  padding:40px 28px;max-width:340px;width:100%;text-align:center;
+  box-shadow:var(--shadow-lg);
+  animation:certIn .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes certIn{0%{opacity:0;transform:scale(.4) rotate(-8deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+.cert-card .cert-badge{font-size:64px;margin-bottom:14px;animation:certBadgePulse 2s ease-in-out infinite}
+@keyframes certBadgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.cert-card h2{font-size:22px;margin-bottom:8px;color:#4B4B4B;font-weight:800}
+.cert-card .cert-subtitle{font-size:14px;color:var(--text-mid);margin-bottom:16px;font-weight:600}
+.cert-card .cert-desc{font-size:13px;color:var(--text-dim);margin-bottom:24px;line-height:1.6}
+.cert-card .cert-btn{
+  background:var(--c-current);color:#fff;
+  border:none;padding:14px 40px;border-radius:16px;
+  font-size:15px;font-weight:800;cursor:pointer;
+  box-shadow:0 4px 0 var(--c-current-dark);transition:all .1s;
+}
+.cert-card .cert-btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--c-current-dark)}
+
+/* ========== 移动端 ========== */
+@media(max-width:480px){
+  :root{--map-width:100%;--node-size:50px;--boss-size:66px}
+  .map-header{padding:10px 14px}
+  .map-header h1{font-size:18px}
+  .progress-info{font-size:12px;gap:6px}
+  .xp-badge,.star-badge{padding:4px 10px;font-size:12px}
+  .level-node{font-size:18px}
+  .kuro-char{width:34px;height:38px}
+  .kuro-body{width:30px;height:30px}
+  .modal-content{padding:24px 18px}
+  .debug-panel{width:180px}
+  .locked-worlds{grid-template-columns:repeat(2,1fr)}
+  .modal-overlay{padding:0;align-items:flex-end}
+  .modal-content{max-width:100%;max-height:85vh;overflow-y:auto;border-radius:24px 24px 0 0}
+  .cert-card{max-width:100%}
+  .bottom-nav{bottom:8px;max-width:calc(100% - 16px)}
+  .nav-btn{font-size:9px;padding:4px 8px}
+  .nav-btn .nav-icon{font-size:20px}
+}
+</style>
+</head>
+<body>
+
+<!-- 错误显示 -->
+<div id="error-display" style="position:fixed;top:0;left:0;right:0;z-index:9999;padding:8px 16px;font-size:13px;background:#fff;color:#58CC02;border-bottom:1px solid #eee;display:none;font-weight:700"></div>
+
+<!-- ========== 地图页 ========== -->
+<div id="map-page" class="page active">
+  <header class="map-header">
+    <h1>Agent新手村</h1>
+    <div class="progress-info">
+      <span class="xp-badge">⚡ XP <span id="xp-value">0</span></span>
+      <span class="star-badge">⭐ <span id="stars-value">0</span>/57</span>
+    </div>
+  </header>
+  <div class="map-scroll" id="map-scroll">
+    <div class="map-container" id="map-container"></div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-panel="map"><span class="nav-icon">🗺️</span>地图</button>
+    <button class="nav-btn" data-panel="kuro"><span class="nav-icon">🐱</span>小黑</button>
+    <button class="nav-btn" data-panel="dict"><span class="nav-icon">📖</span>词典</button>
+    <button class="nav-btn" data-panel="achieve"><span class="nav-icon">🏆</span>成就</button>
+    <button class="nav-btn" data-panel="settings"><span class="nav-icon">⚙️</span>设置</button>
+  </nav>
+</div>
+
+<!-- ========== 关卡页(占位) ========== -->
+<div id="level-page" class="page">
+  <div class="level-header">
+    <button class="back-btn" onclick="Game.backToMap()">← 返回地图</button>
+    <h2 id="level-title">关卡</h2>
+  </div>
+  <div class="level-content">
+    <div class="placeholder-icon">🚧</div>
+    <p>关卡内容将在后续阶段接入</p>
+    <p>当前阶段：阶段1.5 - 卡通视觉重做</p>
+    <p style="margin-top:20px;color:var(--c-current)"></p>
+  </div>
+</div>
+
+<!-- ========== 关卡信息卡 ========== -->
+<div id="level-info-card" class="modal-overlay" hidden>
+  <div class="modal-content" id="info-card-content">
+    <h2 id="info-title"></h2>
+    <div id="info-body"></div>
+    <div class="modal-buttons" id="info-buttons"></div>
+  </div>
+</div>
+
+<!-- ========== 调试面板 ========== -->
+<div class="debug-toggle" id="debug-toggle" onclick="Debug.toggle()">🔧</div>
+<div class="debug-panel" id="debug-panel" hidden>
+  <h3>调试面板</h3>
+  <button onclick="Debug.completeCurrent()">✅ 完成当前关</button>
+  <button onclick="Debug.resetProgress()">🔄 重置进度</button>
+  <button onclick="Debug.unlockAll()">🔓 解锁全部</button>
+  <div class="debug-dropdown" id="debug-dropdown">
+    <button class="debug-dropdown-btn" onclick="Debug.toggleDropdown()">选择关卡</button>
+    <div class="debug-dropdown-list" id="debug-dropdown-list" hidden></div>
+  </div>
+  <button onclick="Debug.toggleStateView()">📊 查看 State</button>
+  <pre id="debug-state-view" hidden></pre>
+</div>
+
+<script>
+/* ========== 1. State 游戏状态 ========== */
+const State = {
+  version: "1.0",
+  currentLevel: "ai_camp_1",
+  levels: {},
+  xp: 0,
+  totalStars: 0,
+  achievements: [],
+
+  init() {
+    LevelData.forEach(l => {
+      this.levels[l.id] = { unlocked: false, completed: false, stars: 0, hintsUsed: 0 };
+    });
+    this.levels["ai_camp_1"].unlocked = true;
+  },
+
+  save() {
+    localStorage.setItem("agent_village_save", JSON.stringify({
+      version: this.version,
+      timestamp: Date.now(),
+      currentLevel: this.currentLevel,
+      levels: this.levels,
+      xp: this.xp,
+      totalStars: this.totalStars,
+      achievements: this.achievements
+    }));
+  },
+
+  load() {
+    const raw = localStorage.getItem("agent_village_save");
+    if (!raw) return false;
+    try {
+      const d = JSON.parse(raw);
+      this.currentLevel = d.currentLevel || "ai_camp_1";
+      this.levels = d.levels || {};
+      this.xp = d.xp || 0;
+      this.totalStars = d.totalStars || 0;
+      this.achievements = d.achievements || [];
+      LevelData.forEach(l => {
+        if (!this.levels[l.id]) this.levels[l.id] = { unlocked: false, completed: false, stars: 0, hintsUsed: 0 };
+      });
+      return true;
+    } catch(e) { return false; }
+  },
+
+  reset() {
+    localStorage.removeItem("agent_village_save");
+    this.currentLevel = "ai_camp_1";
+    this.xp = 0;
+    this.totalStars = 0;
+    this.achievements = [];
+    this.init();
+  },
+
+  completeLevel(levelId, stars = 3) {
+    const level = LevelData.find(l => l.id === levelId);
+    if (!level) return;
+    const ls = this.levels[levelId];
+    if (ls.completed) return;
+
+    ls.completed = true;
+    ls.stars = stars;
+    this.xp += level.xp;
+    this.totalStars += stars;
+
+    const idx = LevelData.findIndex(l => l.id === levelId);
+    if (idx < LevelData.length - 1) {
+      const next = LevelData[idx + 1];
+      this.levels[next.id].unlocked = true;
+      this.currentLevel = next.id;
+    }
+
+    if (level.isBoss) {
+      const am = { "ai_camp_5": "AI认知入门", "w1_8": "终端操作员", "w2_6": "逻辑入门" };
+      if (am[levelId] && !this.achievements.includes(am[levelId])) {
+        this.achievements.push(am[levelId]);
+      }
+    }
+    this.save();
+  },
+
+  unlockAll() {
+    LevelData.forEach(l => { this.levels[l.id].unlocked = true; });
+    this.save();
+  },
+
+  getNodeState(levelId) {
+    const ls = this.levels[levelId];
+    if (!ls) return "locked";
+    if (ls.completed) return "completed";
+    if (ls.unlocked) return "current";
+    return "locked";
+  }
+};
+
+/* ========== 2. LevelData 关卡数据 ========== */
+const LevelData = [
+  // --- AI启蒙营 5关 ---
+  { id:"ai_camp_1", world:"ai_camp", levelNumber:1, title:"AI是什么，不是什么",
+    learningGoal:"建立正确的AI认知：AI不是人，根据上下文生成内容",
+    whyLearnThis:"不知道AI的能力边界，你可能会迷信或害怕AI",
+    agentView:"AI根据上下文生成内容，需要清楚指令",
+    isBoss:false, xp:100, pos:{x:80,y:80} },
+  { id:"ai_camp_2", world:"ai_camp", levelNumber:2, title:"Prompt是什么",
+    learningGoal:"理解Prompt是给AI的指令，越清楚越好",
+    whyLearnThis:"Agent靠Prompt理解任务，不会写就指挥不了",
+    agentView:"Agent靠Prompt理解任务",
+    isBoss:false, xp:100, pos:{x:320,y:160} },
+  { id:"ai_camp_3", world:"ai_camp", levelNumber:3, title:"上下文为什么重要",
+    learningGoal:"理解上下文是AI的记忆",
+    whyLearnThis:"Agent多步任务需要记住之前的步骤",
+    agentView:"上下文是AI的记忆",
+    isBoss:false, xp:100, pos:{x:80,y:240} },
+  { id:"ai_camp_4", world:"ai_camp", levelNumber:4, title:"AI为什么会出错",
+    learningGoal:"理解AI会出错和幻觉",
+    whyLearnThis:"Agent也会出错，你需要验收结果",
+    agentView:"AI会编出不存在的信息",
+    isBoss:false, xp:100, pos:{x:320,y:320} },
+  { id:"ai_camp_5", world:"ai_camp", levelNumber:5, title:"AI、工具、Agent、工作流",
+    learningGoal:"理解从AI到工作流的完整路径",
+    whyLearnThis:"这是你后面所有学习的地图",
+    agentView:"AI到工作流的完整路径",
+    isBoss:true, xp:200, pos:{x:200,y:420} },
+
+  // --- W1 黑窗口村 8关 ---
+  { id:"w1_1", world:"w1", levelNumber:1, title:"初识终端：Get-Location",
+    learningGoal:"学会用Get-Location查看当前位置",
+    whyLearnThis:"Agent操作文件前需要知道在哪",
+    agentView:"执行前确认位置",
+    isBoss:false, xp:100, pos:{x:80,y:540} },
+  { id:"w1_2", world:"w1", levelNumber:2, title:"看看周围：Get-ChildItem",
+    learningGoal:"学会用Get-ChildItem列出文件",
+    whyLearnThis:"Agent需要看到文件夹里有什么",
+    agentView:"Agent观察文件夹内容",
+    isBoss:false, xp:100, pos:{x:320,y:620} },
+  { id:"w1_3", world:"w1", levelNumber:3, title:"去别的地方：Set-Location",
+    learningGoal:"学会用Set-Location进入文件夹",
+    whyLearnThis:"Agent需要移动到工作位置",
+    agentView:"Agent移动到工作位置",
+    isBoss:false, xp:100, pos:{x:80,y:700} },
+  { id:"w1_4", world:"w1", levelNumber:4, title:"打开文件：Get-Content",
+    learningGoal:"学会用Get-Content查看文件内容",
+    whyLearnThis:"Agent需要读取文件信息",
+    agentView:"Agent读取文件信息",
+    isBoss:false, xp:100, pos:{x:320,y:780} },
+  { id:"w1_5", world:"w1", levelNumber:5, title:"新建东西：New-Item",
+    learningGoal:"学会用New-Item创建文件",
+    whyLearnThis:"Agent需要保存执行结果到新文件",
+    agentView:"Agent保存执行结果",
+    isBoss:false, xp:100, pos:{x:80,y:860} },
+  { id:"w1_6", world:"w1", levelNumber:6, title:"删除和复制：Remove/Copy-Item",
+    learningGoal:"学会删除和复制文件",
+    whyLearnThis:"Agent需要清理和备份文件",
+    agentView:"Agent清理和备份文件",
+    isBoss:false, xp:150, pos:{x:320,y:940} },
+  { id:"w1_7", world:"w1", levelNumber:7, title:"搜索文本：Select-String",
+    learningGoal:"学会用Select-String搜索文件内容",
+    whyLearnThis:"Agent需要查找特定信息",
+    agentView:"Agent查找特定信息",
+    isBoss:false, xp:150, pos:{x:80,y:1020} },
+  { id:"w1_8", world:"w1", levelNumber:8, title:"Boss战：管道符",
+    learningGoal:"学会用管道符串联命令",
+    whyLearnThis:"Agent多步骤执行任务的核心",
+    agentView:"Agent多步骤执行任务",
+    isBoss:true, xp:300, pos:{x:200,y:1120} },
+
+  // --- W2 代码森林 6关 ---
+  { id:"w2_1", world:"w2", levelNumber:1, title:"变量：给信息起名字",
+    learningGoal:"理解变量是给信息起名字",
+    whyLearnThis:"Agent需要保存中间信息",
+    agentView:"Agent保存中间信息",
+    isBoss:false, xp:100, pos:{x:80,y:1240} },
+  { id:"w2_2", world:"w2", levelNumber:2, title:"条件：如果……就……",
+    learningGoal:"理解条件判断：如果……就……",
+    whyLearnThis:"Agent需要做判断选工具",
+    agentView:"Agent做判断选工具",
+    isBoss:false, xp:100, pos:{x:320,y:1320} },
+  { id:"w2_3", world:"w2", levelNumber:3, title:"循环：重复做一件事",
+    learningGoal:"理解循环是重复做事",
+    whyLearnThis:"Agent需要批量处理任务",
+    agentView:"Agent批量处理任务",
+    isBoss:false, xp:100, pos:{x:80,y:1400} },
+  { id:"w2_4", world:"w2", levelNumber:4, title:"函数：打包步骤成工具",
+    learningGoal:"理解函数是打包步骤成工具",
+    whyLearnThis:"Agent工具就是函数",
+    agentView:"Agent工具就是函数",
+    isBoss:false, xp:150, pos:{x:320,y:1480} },
+  { id:"w2_5", world:"w2", levelNumber:5, title:"输入输出：接收和给出",
+    learningGoal:"理解输入是接收，输出是给出",
+    whyLearnThis:"Agent接收任务交付结果",
+    agentView:"Agent接收任务交付结果",
+    isBoss:false, xp:150, pos:{x:80,y:1560} },
+  { id:"w2_6", world:"w2", levelNumber:6, title:"Boss战：指挥小黑完成任务",
+    learningGoal:"把任务拆成步骤排序",
+    whyLearnThis:"Agent执行任务的核心逻辑",
+    agentView:"Agent执行任务的核心逻辑",
+    isBoss:true, xp:300, pos:{x:200,y:1660} },
+];
+
+/* ========== 3. Regions 区域定义 ========== */
+const Regions = [
+  { id:"ai_camp", name:"AI启蒙营 · 新手天空岛", icon:"🏕️", cls:"region-ai-camp", startY:0, endY:480 },
+  { id:"w1", name:"W1 黑窗口村 · 夜晚村庄", icon:"🌙", cls:"region-w1", startY:480, endY:1180 },
+  { id:"w2", name:"W2 代码森林 · 逻辑森林", icon:"🌲", cls:"region-w2", startY:1180, endY:1720 },
+];
+
+const LockedWorlds = [
+  { id:"w3", name:"W3 Python花园", ver:"v1.5" },
+  { id:"w4", name:"W4 环境工坊", ver:"v2.0" },
+  { id:"w5", name:"W5 C语言矿山", ver:"v2.0" },
+  { id:"w6", name:"W6 智能体工坊", ver:"v3.0" },
+  { id:"w7", name:"W7 工作流工场", ver:"v3.0" },
+];
+
+/* ========== WorldMap 世界地图 ========== */
+const WorldMap = {
+  container: null,
+
+  init() {
+    this.container = document.getElementById("map-container");
+    this.render();
+  },
+
+  render() {
+    this.container.innerHTML = "";
+    const mapH = 1850;
+    this.container.style.minHeight = mapH + "px";
+
+    // 渲染各区域
+    Regions.forEach((region, ri) => {
+      const regionDiv = document.createElement("div");
+      regionDiv.className = "region " + region.cls;
+      regionDiv.style.position = "absolute";
+      regionDiv.style.left = "0";
+      regionDiv.style.right = "0";
+      regionDiv.style.top = region.startY + "px";
+      regionDiv.style.height = (region.endY - region.startY) + "px";
+
+      const title = document.createElement("div");
+      title.className = "region-title";
+      title.style.position = "sticky";
+      title.style.top = "0";
+      title.style.zIndex = "5";
+      title.innerHTML = `<span class="region-icon">${region.icon}</span>${region.name}`;
+      regionDiv.appendChild(title);
+
+      // 装饰元素
+      this.renderDecorations(region, regionDiv);
+
+      this.container.appendChild(regionDiv);
+
+      // 区域间分隔
+      if (ri < Regions.length - 1) {
+        const divider = document.createElement("div");
+        divider.className = "region-divider";
+        divider.style.position = "absolute";
+        divider.style.left = "0";
+        divider.style.right = "0";
+        divider.style.top = region.endY + "px";
+        divider.style.zIndex = "3";
+        divider.textContent = "❋ ❋ ❋";
+        this.container.appendChild(divider);
+      }
+    });
+
+    // 锁定区域
+    const lockedDiv = document.createElement("div");
+    lockedDiv.className = "region region-locked";
+    lockedDiv.style.position = "absolute";
+    lockedDiv.style.left = "0";
+    lockedDiv.style.right = "0";
+    lockedDiv.style.top = "1720px";
+    lockedDiv.style.height = "130px";
+
+    const lockedTitle = document.createElement("div");
+    lockedTitle.className = "region-title";
+    lockedTitle.innerHTML = "🌫️ 后续世界";
+    lockedDiv.appendChild(lockedTitle);
+
+    // 雾气山丘
+    const hills = document.createElement("div");
+    hills.className = "deco-hills";
+    lockedDiv.appendChild(hills);
+
+    const lockedGrid = document.createElement("div");
+    lockedGrid.className = "locked-worlds";
+    LockedWorlds.forEach(w => {
+      const card = document.createElement("div");
+      card.className = "locked-world-card";
+      card.innerHTML = `<span class="lock">🔒</span><span class="name">${w.name}</span><span class="ver">${w.ver} 解锁</span>`;
+      lockedGrid.appendChild(card);
+    });
+    lockedDiv.appendChild(lockedGrid);
+    this.container.appendChild(lockedDiv);
+
+    // 渲染SVG路径
+    this.renderPaths();
+
+    // 渲染节点
+    this.renderNodes();
+
+    // 渲染小黑
+    this.renderKuro();
+  },
+
+  renderDecorations(region, regionDiv) {
+    if (region.id === "ai_camp") {
+      // 云朵
+      const clouds = [
+        {x:8,y:20,s:1,d:0},{x:72,y:90,s:.8,d:2},{x:15,y:200,s:1.2,d:1},{x:78,y:330,s:.9,d:3}
+      ];
+      clouds.forEach(c => {
+        const el = document.createElement("div");
+        el.className = "deco-cloud";
+        el.style.left = c.x + "%";
+        el.style.top = c.y + "px";
+        el.style.transform = `scale(${c.s})`;
+        el.style.animationDelay = c.d + "s";
+        regionDiv.appendChild(el);
+      });
+      // 星星闪烁
+      for (let i = 0; i < 6; i++) {
+        const el = document.createElement("div");
+        el.className = "deco-sparkle";
+        el.style.left = (10 + Math.random() * 80) + "%";
+        el.style.top = (30 + Math.random() * 400) + "px";
+        el.style.animationDelay = (Math.random() * 3) + "s";
+        regionDiv.appendChild(el);
+      }
+    } else if (region.id === "w1") {
+      // 窗户灯光
+      const wins = [
+        {x:6,y:50},{x:84,y:110},{x:4,y:260},{x:86,y:340},{x:8,y:480},{x:82,y:560},{x:5,y:640}
+      ];
+      wins.forEach(w => {
+        const el = document.createElement("div");
+        el.className = "deco-window";
+        el.style.left = w.x + "%";
+        el.style.top = w.y + "px";
+        el.style.animationDelay = (Math.random() * 3) + "s";
+        regionDiv.appendChild(el);
+      });
+      // 绿色终端光
+      for (let i = 0; i < 5; i++) {
+        const el = document.createElement("div");
+        el.className = "deco-terminal-glow";
+        el.style.left = (10 + Math.random() * 80) + "%";
+        el.style.top = (40 + Math.random() * 600) + "px";
+        el.style.animationDelay = (Math.random() * 2.5) + "s";
+        regionDiv.appendChild(el);
+      }
+    } else if (region.id === "w2") {
+      // 萤火虫
+      for (let i = 0; i < 14; i++) {
+        const el = document.createElement("div");
+        el.className = "deco-firefly";
+        el.style.left = (8 + Math.random() * 84) + "%";
+        el.style.top = (20 + Math.random() * 480) + "px";
+        el.style.animationDelay = (Math.random() * 4) + "s";
+        el.style.animationDuration = (4 + Math.random() * 4) + "s";
+        regionDiv.appendChild(el);
+      }
+      // 叶子
+      const leaves = [
+        {x:6,y:40,r:-15},{x:88,y:120,r:20},{x:4,y:280,r:-10},{x:90,y:380,r:25},{x:8,y:500,r:-20}
+      ];
+      leaves.forEach(l => {
+        const el = document.createElement("div");
+        el.className = "deco-leaf";
+        el.style.left = l.x + "%";
+        el.style.top = l.y + "px";
+        el.style.transform = `rotate(${l.r}deg)`;
+        el.textContent = "🍃";
+        regionDiv.appendChild(el);
+      });
+    }
+  },
+
+  renderPaths() {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.classList.add("map-svg");
+    svg.setAttribute("viewBox", `0 0 400 1850`);
+    svg.setAttribute("preserveAspectRatio", "xMidYMin meet");
+
+    Regions.forEach(region => {
+      const levels = LevelData.filter(l => l.world === region.id);
+      if (levels.length < 2) return;
+
+      let d = `M ${levels[0].pos.x} ${levels[0].pos.y}`;
+      for (let i = 1; i < levels.length; i++) {
+        const prev = levels[i-1];
+        const curr = levels[i];
+        const midX = (prev.pos.x + curr.pos.x) / 2;
+        const midY = (prev.pos.y + curr.pos.y) / 2;
+        d += ` Q ${midX} ${midY}, ${curr.pos.x} ${curr.pos.y}`;
+      }
+
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", d);
+      path.classList.add("path-segment");
+
+      const allCompleted = levels.every(l => State.levels[l.id] && State.levels[l.id].completed);
+      if (allCompleted) path.classList.add("completed");
+
+      svg.appendChild(path);
+    });
+
+    this.container.appendChild(svg);
+  },
+
+  renderNodes() {
+    const layer = document.createElement("div");
+    layer.className = "nodes-layer";
+
+    LevelData.forEach(level => {
+      const nodeState = State.getNodeState(level.id);
+      const node = document.createElement("div");
+      node.className = "level-node";
+      node.dataset.levelId = level.id;
+      node.style.left = level.pos.x + "px";
+      node.style.top = level.pos.y + "px";
+
+      if (level.isBoss) node.classList.add("boss");
+
+      if (nodeState === "locked") {
+        node.classList.add("node-locked");
+      } else if (nodeState === "current") {
+        node.classList.add("node-current");
+        if (level.isBoss) {
+          node.innerHTML = '<span class="node-boss-icon">🚩</span><span class="node-num">' + level.levelNumber + '</span>';
+        } else {
+          node.innerHTML = '<span class="node-num">' + level.levelNumber + '</span>';
+        }
+      } else if (nodeState === "completed") {
+        node.classList.add("node-completed");
+        if (level.isBoss) {
+          node.innerHTML = '<span class="node-boss-icon">🏆</span><span class="node-num">' + level.levelNumber + '</span>';
+        } else {
+          node.innerHTML = '<span class="node-num">' + level.levelNumber + '</span>';
+        }
+        const stars = State.levels[level.id].stars;
+        const starsDiv = document.createElement("div");
+        starsDiv.className = "node-stars";
+        for (let s = 0; s < 3; s++) {
+          const star = document.createElement("span");
+          star.className = s < stars ? "star" : "star empty";
+          star.textContent = "★";
+          starsDiv.appendChild(star);
+        }
+        node.appendChild(starsDiv);
+      }
+
+      node.addEventListener("click", () => this.onNodeClick(level.id));
+
+      // 当前关卡加引导提示
+      if (nodeState === "current") {
+        const hint = document.createElement("div");
+        hint.className = "node-hint";
+        hint.textContent = "👆 点击开始";
+        node.appendChild(hint);
+      }
+
+      layer.appendChild(node);
+    });
+
+    this.container.appendChild(layer);
+  },
+
+  renderKuro() {
+    const level = LevelData.find(l => l.id === State.currentLevel);
+    if (!level) return;
+
+    let kuro = document.querySelector(".kuro-on-map");
+    if (!kuro) {
+      kuro = document.createElement("div");
+      kuro.className = "kuro-on-map";
+      kuro.innerHTML = `
+        <div class="kuro-bubble" id="kuro-bubble"></div>
+        <div class="kuro-char">
+          <div class="kuro-antenna"></div>
+          <div class="kuro-body">
+            <div class="kuro-face">
+              <div class="kuro-eye"></div>
+              <div class="kuro-eye"></div>
+            </div>
+          </div>
+          <div class="kuro-shadow"></div>
+        </div>
+      `;
+      this.container.appendChild(kuro);
+    }
+
+    const offsetX = level.pos.x < 200 ? 38 : -38;
+    kuro.style.left = (level.pos.x + offsetX) + "px";
+    kuro.style.top = (level.pos.y - 2) + "px";
+  },
+
+  onNodeClick(levelId) {
+    const level = LevelData.find(l => l.id === levelId);
+    if (!level) return;
+    const nodeState = State.getNodeState(levelId);
+
+    if (nodeState === "locked") {
+      const idx = LevelData.findIndex(l => l.id === levelId);
+      const prevLevel = idx > 0 ? LevelData[idx - 1] : null;
+      Game.showLockedInfo(level, prevLevel);
+      return;
+    }
+
+    Game.showLevelInfo(level, nodeState);
+  },
+
+  updateNode(levelId) {
+    const node = this.container.querySelector(`[data-level-id="${levelId}"]`);
+    if (!node) return;
+    const level = LevelData.find(l => l.id === levelId);
+    const nodeState = State.getNodeState(levelId);
+
+    node.classList.remove("node-locked", "node-current", "node-completed");
+    // 清除非装饰子元素
+    node.innerHTML = "";
+
+    if (nodeState === "locked") {
+      node.classList.add("node-locked");
+    } else if (nodeState === "current") {
+      node.classList.add("node-current");
+      node.innerHTML = (level.isBoss ? '<span class="node-boss-icon">🚩</span>' : '') + '<span class="node-num">' + level.levelNumber + '</span>';
+      // 加引导提示
+      const hint = document.createElement("div");
+      hint.className = "node-hint";
+      hint.textContent = "👆 点击开始";
+      node.appendChild(hint);
+    } else if (nodeState === "completed") {
+      node.classList.add("node-completed");
+      node.innerHTML = (level.isBoss ? '<span class="node-boss-icon">🏆</span>' : '') + '<span class="node-num">' + level.levelNumber + '</span>';
+      const stars = State.levels[levelId].stars;
+      const starsDiv = document.createElement("div");
+      starsDiv.className = "node-stars";
+      for (let s = 0; s < 3; s++) {
+        const star = document.createElement("span");
+        star.className = s < stars ? "star" : "star empty";
+        star.textContent = "★";
+        starsDiv.appendChild(star);
+      }
+      node.appendChild(starsDiv);
+    }
+  },
+
+  refresh() {
+    this.render();
+    Game.updateProgress();
+  }
+};
+
+/* ========== NPC 小黑 ========== */
+const NPC = {
+  say(msg) {
+    const bubble = document.getElementById("kuro-bubble");
+    if (!bubble) return;
+    bubble.textContent = msg;
+    bubble.classList.add("show");
+    setTimeout(() => bubble.classList.remove("show"), 3000);
+  },
+
+  updatePosition() {
+    const kuro = document.querySelector(".kuro-on-map");
+    if (kuro) {
+      // 先移除跳跃
+      kuro.classList.remove("hopping");
+      // 延迟加回跳跃动画（等移动结束后）
+      setTimeout(() => {
+        kuro.classList.add("hopping");
+        setTimeout(() => kuro.classList.remove("hopping"), 400);
+      }, 700);
+    }
+    WorldMap.renderKuro();
+  }
+};
+
+/* ========== Game 游戏主控制器 ========== */
+const Game = {
+  currentLevelId: null,
+  kuroMessages: ["下一关在这里！", "做得不错！", "继续前进！", "加油加油！"],
+
+  init() {
+    if (!State.load()) {
+      State.init();
+    }
+    WorldMap.init();
+    this.updateProgress();
+    Debug.init();
+    this.bindNav();
+    // 小黑初始问候
+    setTimeout(() => NPC.say("欢迎来到新手村！"), 800);
+  },
+
+  updateProgress() {
+    document.getElementById("xp-value").textContent = State.xp;
+    document.getElementById("stars-value").textContent = State.totalStars;
+  },
+
+  showLevelInfo(level, nodeState) {
+    this.currentLevelId = level.id;
+    const card = document.getElementById("level-info-card");
+    const content = document.getElementById("info-card-content");
+    const body = document.getElementById("info-body");
+    const buttons = document.getElementById("info-buttons");
+
+    var bossTag = level.isBoss ? " 🚩" : "";
+    document.getElementById("info-title").textContent = `第${level.levelNumber}关：${level.title}${bossTag}`;
+    content.className = "modal-content" + (level.isBoss ? " boss" : "");
+    card.classList.remove("closing");
+
+    if (nodeState === "completed") {
+      const stars = State.levels[level.id].stars;
+      body.innerHTML = `
+        <div class="info-section"><strong>📋 学习目标</strong><p>${level.learningGoal}</p></div>
+        <div class="info-section"><strong>❓ 为什么学这个</strong><p>${level.whyLearnThis}</p></div>
+        <div class="info-section"><strong>🤖 Agent视角</strong><p>${level.agentView}</p></div>
+        <div class="info-section"><strong>🎁 获得</strong><p>+${level.xp} XP | ⭐${stars}/3</p></div>
+        <div class="info-section" style="text-align:center;color:var(--c-current)"><p>✅ 已完成</p></div>
+      `;
+      buttons.innerHTML = `
+        <button class="btn-primary" onclick="Game.startLevel()">📖 回顾</button>
+        <button class="btn-secondary" onclick="Game.closeInfo()">返回地图</button>
+      `;
+    } else {
+      body.innerHTML = `
+        <div class="info-section"><strong>📋 学习目标</strong><p>${level.learningGoal}</p></div>
+        <div class="info-section"><strong>❓ 为什么学这个</strong><p>${level.whyLearnThis}</p></div>
+        <div class="info-section"><strong>🤖 Agent视角</strong><p>${level.agentView}</p></div>
+        <div class="info-section"><strong>🎁 奖励</strong>
+          <div class="info-reward"><span>+${level.xp} XP</span><span>零提示 ⭐⭐⭐</span></div>
+        </div>
+      `;
+      buttons.innerHTML = `
+        <button class="btn-primary" onclick="Game.startLevel()">开始挑战</button>
+        <button class="btn-secondary" onclick="Game.closeInfo()">返回地图</button>
+      `;
+    }
+
+    card.hidden = false;
+  },
+
+  closeInfo() {
+    const card = document.getElementById("level-info-card");
+    card.classList.add("closing");
+    setTimeout(() => {
+      card.hidden = true;
+      card.classList.remove("closing");
+    }, 200);
+  },
+
+  showLockedInfo(level, prevLevel) {
+    const card = document.getElementById("level-info-card");
+    const content = document.getElementById("info-card-content");
+    const body = document.getElementById("info-body");
+    const buttons = document.getElementById("info-buttons");
+
+    document.getElementById("info-title").textContent = `第${level.levelNumber}关：${level.title}`;
+    content.className = "modal-content locked-content";
+    card.classList.remove("closing");
+
+    body.innerHTML = `
+      <div class="locked-condition">
+        <span class="lock-icon">🔒</span>
+        <div class="lock-text">需要先完成前一关</div>
+        ${prevLevel ? `<div class="lock-level">↳ ${prevLevel.title}</div>` : ''}
+      </div>
+    `;
+    buttons.innerHTML = `<button class="btn-secondary" onclick="Game.closeInfo()" style="width:100%">返回地图</button>`;
+
+    card.hidden = false;
+  },
+
+  startLevel() {
+    this.closeInfo();
+    document.getElementById("map-page").classList.remove("active");
+    document.getElementById("level-page").classList.add("active");
+    const level = LevelData.find(l => l.id === this.currentLevelId);
+    document.getElementById("level-title").textContent = level ? level.title : "关卡";
+  },
+
+  backToMap() {
+    document.getElementById("level-page").classList.remove("active");
+    document.getElementById("map-page").classList.add("active");
+  },
+
+  showToast(msg) {
+    const existing = document.querySelector(".toast");
+    if (existing) existing.remove();
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2500);
+  },
+
+  bindNav() {
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const panel = btn.dataset.panel;
+        var label = btn.textContent.trim();
+        document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        if (panel !== "map") {
+          this.showToast("📋 " + label + " 面板将在后续阶段完善");
+          setTimeout(() => {
+            document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+            document.querySelector('.nav-btn[data-panel="map"]').classList.add("active");
+          }, 100);
+        }
+      });
+    });
+  },
+
+  /* ===== 完成关卡动画序列 ===== */
+  animateLevelComplete(levelId) {
+    const node = WorldMap.container.querySelector('[data-level-id="' + levelId + '"]');
+    if (!node) { this._finishComplete(levelId); return; }
+
+    node.classList.add("lighting-up");
+
+    setTimeout(() => {
+      node.classList.remove("lighting-up");
+      this._finishComplete(levelId);
+    }, 600);
+  },
+
+  _finishComplete(levelId) {
+    const level = LevelData.find(l => l.id === levelId);
+    if (!level) return;
+
+    State.completeLevel(levelId, 3);
+
+    // 增量更新当前节点
+    WorldMap.updateNode(levelId);
+
+    // 星星落下动画
+    const newNode = WorldMap.container.querySelector('[data-level-id="' + levelId + '"]');
+    if (newNode) {
+      const stars = newNode.querySelectorAll(".node-stars .star:not(.empty)");
+      stars.forEach((star, i) => {
+        star.style.animationDelay = (i * 0.15) + "s";
+        star.classList.add("falling");
+      });
+    }
+
+    // XP动画
+    this.animateXP(level.xp);
+
+    // 更新下一关节点
+    const idx = LevelData.findIndex(l => l.id === levelId);
+    if (idx < LevelData.length - 1) {
+      const nextId = LevelData[idx + 1].id;
+      WorldMap.updateNode(nextId);
+    }
+
+    // 小黑移动 + 跳跃
+    NPC.updatePosition();
+
+    // 小黑说话
+    var msg = this.kuroMessages[Math.floor(Math.random() * this.kuroMessages.length)];
+    setTimeout(() => NPC.say(msg), 800);
+
+    Debug.updateSelect();
+    this.updateProgress();
+    this.checkRegionComplete(level);
+    this.showToast("✅ " + level.title + " 完成！");
+  },
+
+  animateXP(gain) {
+    const badge = document.querySelector(".xp-badge");
+    const valueEl = document.getElementById("xp-value");
+    if (!badge || !valueEl) return;
+
+    const float = document.createElement("div");
+    float.className = "xp-gain-float";
+    float.textContent = "+" + gain;
+    badge.appendChild(float);
+    setTimeout(() => { if (float.parentNode) float.remove(); }, 1200);
+
+    const oldXP = parseInt(valueEl.textContent) || 0;
+    const newXP = State.xp;
+    const duration = 600;
+    const startTime = Date.now();
+    const tick = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const current = Math.floor(oldXP + (newXP - oldXP) * progress);
+      valueEl.textContent = current;
+      if (progress < 1) requestAnimationFrame(tick);
+      else valueEl.textContent = newXP;
+    };
+    requestAnimationFrame(tick);
+
+    badge.classList.add("bumping");
+    setTimeout(() => badge.classList.remove("bumping"), 500);
+  },
+
+  checkRegionComplete(level) {
+    const regionLevels = LevelData.filter(l => l.world === level.world);
+    const allDone = regionLevels.every(l => State.levels[l.id] && State.levels[l.id].completed);
+    if (!allDone) return;
+
+    const certInfo = {
+      "ai_camp": { icon:"✨", title:"AI认知入门证书", region:"AI启蒙营", desc:"你已经理解了AI的基本概念、Prompt、上下文和Agent的关系" },
+      "w1":      { icon:"💻", title:"终端操作员证书", region:"W1 黑窗口村", desc:"你已经掌握了PowerShell基础命令，可以指挥Agent操作文件系统" },
+      "w2":      { icon:"🌲", title:"逻辑入门证书", region:"W2 代码森林", desc:"你已经理解了变量、条件、循环、函数——编程逻辑的四大基石" }
+    };
+    const cert = certInfo[level.world];
+    if (!cert) return;
+
+    if (this["_certShown_" + level.world]) return;
+    this["_certShown_" + level.world] = true;
+
+    setTimeout(() => this.showCert(cert), 800);
+  },
+
+  showCert(cert) {
+    const existing = document.querySelector(".cert-overlay");
+    if (existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.className = "cert-overlay";
+    overlay.innerHTML = `
+      <div class="cert-card">
+        <div class="cert-badge">${cert.icon}</div>
+        <h2>${cert.title}</h2>
+        <div class="cert-subtitle">${cert.region} 全部完成</div>
+        <div class="cert-desc">${cert.desc}</div>
+        <button class="cert-btn">领取并继续</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const btn = overlay.querySelector(".cert-btn");
+    btn.addEventListener("click", () => {
+      overlay.style.animation = "overlayOut .3s ease forwards";
+      setTimeout(() => overlay.remove(), 300);
+    });
+  }
+};
+
+/* ========== Debug 调试面板 ========== */
+const Debug = {
+  worldNames: {
+    ai_camp: "AI启蒙营",
+    w1: "W1黑窗口村",
+    w2: "W2代码森林",
+    w3: "W3",
+    w4: "W4",
+    w5: "W5",
+    w6: "W6",
+    w7: "W7"
+  },
+
+  init() {
+    const list = document.getElementById("debug-dropdown-list");
+    list.innerHTML = "";
+    LevelData.forEach(l => {
+      const item = document.createElement("div");
+      item.className = "debug-dropdown-item";
+      item.dataset.id = l.id;
+      const wn = this.worldNames[l.world] || l.world.toUpperCase();
+      item.textContent = `${wn} 第${l.levelNumber}关：${l.title}`;
+      item.onclick = (e) => { e.stopPropagation(); this.selectLevel(l.id); };
+      list.appendChild(item);
+    });
+    this.updateSelect();
+
+    document.addEventListener("click", (e) => {
+      const dd = document.getElementById("debug-dropdown");
+      if (dd && !dd.contains(e.target)) {
+        document.getElementById("debug-dropdown-list").hidden = true;
+      }
+    });
+  },
+
+  toggle() {
+    const panel = document.getElementById("debug-panel");
+    panel.hidden = !panel.hidden;
+    if (panel.hidden) document.getElementById("debug-dropdown-list").hidden = true;
+  },
+
+  toggleDropdown() {
+    const list = document.getElementById("debug-dropdown-list");
+    list.hidden = !list.hidden;
+  },
+
+  selectLevel(levelId) {
+    State.currentLevel = levelId;
+    State.save();
+    WorldMap.refresh();
+    NPC.updatePosition();
+    Game.showToast("📍 切换到: " + LevelData.find(l=>l.id===levelId).title);
+    this.updateSelect();
+  },
+
+  completeCurrent() {
+    const levelId = State.currentLevel;
+    const ls = State.levels[levelId];
+    if (ls && ls.completed) {
+      const next = LevelData.find(l => !State.levels[l.id] || !State.levels[l.id].completed);
+      if (!next) {
+        Game.showToast("🎉 所有关卡已完成！");
+        return;
+      }
+      Game.showToast("当前关已完成，请切换到下一关");
+      return;
+    }
+    Game.animateLevelComplete(levelId);
+  },
+
+  resetProgress() {
+    State.reset();
+    delete Game._certShown_ai_camp;
+    delete Game._certShown_w1;
+    delete Game._certShown_w2;
+    WorldMap.refresh();
+    NPC.updatePosition();
+    this.updateSelect();
+    Game.showToast("🔄 进度已重置");
+  },
+
+  unlockAll() {
+    State.unlockAll();
+    WorldMap.refresh();
+    Game.showToast("🔓 全部关卡已解锁");
+  },
+
+  switchLevel(levelId) {
+    this.selectLevel(levelId);
+  },
+
+  toggleStateView() {
+    const view = document.getElementById("debug-state-view");
+    if (view.hidden) {
+      view.hidden = false;
+      view.textContent = JSON.stringify({
+        currentLevel: State.currentLevel,
+        xp: State.xp,
+        totalStars: State.totalStars,
+        achievements: State.achievements,
+        levels: State.levels
+      }, null, 2);
+    } else {
+      view.hidden = true;
+    }
+  },
+
+  updateSelect() {
+    const btn = document.querySelector(".debug-dropdown-btn");
+    const current = LevelData.find(l => l.id === State.currentLevel);
+    if (btn && current) {
+      const wn = this.worldNames[current.world] || current.world.toUpperCase();
+      btn.textContent = `${wn} 第${current.levelNumber}关：${current.title}`;
+    }
+    document.querySelectorAll(".debug-dropdown-item").forEach(item => {
+      item.classList.toggle("active", item.dataset.id === State.currentLevel);
+    });
+    document.getElementById("debug-dropdown-list").hidden = true;
+  }
+};
+
+/* ========== 启动 ========== */
+window.State = State;
+window.LevelData = LevelData;
+window.WorldMap = WorldMap;
+window.NPC = NPC;
+window.Game = Game;
+window.Debug = Debug;
+
+try {
+  Game.init();
+  var ed = document.getElementById("error-display");
+  ed.textContent = "✅ 游戏已加载 | 点击绿色节点开始 | 右上角🔧调试";
+  ed.style.display = "block";
+  setTimeout(function(){ ed.style.display = "none"; }, 5000);
+} catch(e) {
+  var ed2 = document.getElementById("error-display");
+  ed2.textContent = "❌ 错误: " + e.message;
+  ed2.style.color = "#ff5252";
+  ed2.style.display = "block";
+  console.error(e);
+}
+</script>
+</body>
+</html>
