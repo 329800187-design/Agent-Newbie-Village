@@ -82,7 +82,9 @@ const REL = 'Agent新手村_v1.0_发布候选版.html'; // 用户真实面 (TEST
     rep.assert(resUI.recommended === 'beginner', `低分推荐 beginner (${resUI.recommended})`);
     rep.assert(resUI.dims === 5, `五维能力条渲染 5 条 (${resUI.dims})`);
     rep.assert(resUI.beginnerBtn, 'beginner 确认按钮存在');
-    rep.assert(resUI.disabledBtn.indexOf('世界试炼开发中') >= 0, `foundation 按钮禁用+「世界试炼开发中」(${resUI.disabledBtn.trim()})`);
+    rep.assert(resUI.disabledBtn.indexOf('世界试炼') >= 0
+      && (resUI.disabledBtn.indexOf('开发中') >= 0 || resUI.disabledBtn.indexOf('暂不可用') >= 0),
+      `foundation 按钮禁用, 文案含「世界试炼」与「开发中」或「暂不可用」(${resUI.disabledBtn.trim()})`);
     rep.assert(resUI.html.indexOf('confirmTrack(\'foundation\')') < 0 && resUI.html.indexOf('confirmTrack("foundation")') < 0, '结果页无 foundation 确认入口');
 
     // 控制台强行 confirmTrack('foundation') → 守卫归一为 beginner

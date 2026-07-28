@@ -1,0 +1,71 @@
+{
+  "project": "Agent新手村 / Agent Newbie Village",
+  "phase": "R1.2 第二批骨架开发 (Round2)",
+  "generated_at": "2026-07-28T20:48:00+08:00",
+  "regression": {
+    "original_20_20": { "status": "PASS", "passed": 20, "total": 20 },
+    "round2_new": { "status": "PASS", "passed": 4, "total": 4, "assertions": 96, "assertions_passed": 96 },
+    "overall": "ALL TESTS PASS"
+  },
+  "invariants": {
+    "LevelData": 74, "core": 70, "optional": 4, "worlds": 8,
+    "course_hash": "56860b8325375125f0950398fe512ab8fa9795e7087e30fe6bbf5a8f68965895",
+    "TEST_MODE": false, "pageerror": 0, "requestfailed": 0
+  },
+  "shas": {
+    "alpha2_baseline": "a8f1821295dd4f763157d3764e494a9b0d9d32cb2fc483390bc3ff551a2a797d",
+    "round2_dev_current": "63ade7843e75c85d9311aee563a870c0e6257240a3890d7a3a9dc338abee0058",
+    "note": "round2-dev = Alpha2 冻结版 + 注入的独立 <script>(round2_features.js)；非逐字节相同（按设计追加特性块）。"
+  },
+  "issues_found": [
+    {
+      "id": "ISSUE-001",
+      "severity": "high",
+      "status": "fixed",
+      "title": "apply_round2.py 注入位置错误导致 round2-dev 引擎失效",
+      "detail": "原实现 html.replace('</body>', script_block+'</body>', 1) 替换的是文档中首个 '</body>' 字符串字面量；引擎代码第 3165 行含字符串 \"</body></html>'\"，导致 round2 <script> 被塞进主 <script> 块内部，把 var Game= 等引擎推到可执行脚本之外，整游戏无法运行（浏览器侧 LevelData/Completion/AssetRegistry 均 undefined）。",
+      "resolution": "改为 html.rfind('</body>')（文档末尾真正的 </body>）注入，确保 round2 作为独立尾部 <script> 执行；重新生成 round2-dev 并复测通过（引擎恢复，课程哈希不变）。",
+      "verified_by": ["test_level_experience_registry.js (课程哈希不变 + 全局对象可达)", "test_round2_representative_levels.js (LevelData 可达、面板注入、完成弹窗触发)"]
+    },
+    {
+      "id": "ISSUE-002",
+      "severity": "medium",
+      "status": "fixed",
+      "title": "test_onboarding.js 文案断言过严（锁定整句）",
+      "detail": "原断言锁定整句\"世界试炼开发中\"，但 Alpha2 实际文案为\"🚧 有基础挑战线（世界试炼功能开发中，暂不可用）\"，导致该测试失败。",
+      "resolution": "改为子串校验：含\"世界试炼\" 且（含\"开发中\" 或 含\"暂不可用\"），不锁定整句，兼容产品文案。",
+      "verified_by": ["run_all_tests.py 步骤 18 (test_onboarding.js 退出码 0)", "原 20/20 全部通过"]
+    }
+  ],
+  "known_limitations": [
+    "仅集成 7 个代表关卡 (ai_camp_1/w1_1/w3_13/w4_4/w4_7/w6_9/w7_7) 作为骨架样板，未重写其余 67 关（按用户指令范围）。",
+    "缺失素材桶 (character/node/background/certificate) 全部走占位；占位素材为本地测试夹具，非正式美术资源（按指令不使用正式贴图）。",
+    "本轮不做正式视觉验收、不做正式 Release、不迁剩余关卡、不提交、不推送 main（按用户指令）。"
+  ],
+  "blocked_actions": {
+    "formal_release": false,
+    "migrate_remaining_67_levels": false,
+    "commit": false,
+    "push_main": false,
+    "reason": "按 R1.2 第二批指令：仅完成软件骨架、教学交互、完成反馈；不做正式验收/Release，STOP。"
+  },
+  "new_tests": [
+    { "file": "tests/test_level_experience_registry.js", "assertions": 22, "result": "ALL PASS" },
+    { "file": "tests/test_completion_tiers.js", "assertions": 25, "result": "ALL PASS" },
+    { "file": "tests/test_asset_fallback.js", "assertions": 9, "result": "ALL PASS" },
+    { "file": "tests/test_round2_representative_levels.js", "assertions": 40, "result": "ALL PASS" }
+  ],
+  "deliverables": [
+    "Agent新手村_R1.2-round2-dev.html",
+    "round2_features.js",
+    "apply_round2.py",
+    "tests/test_level_experience_registry.js",
+    "tests/test_completion_tiers.js",
+    "tests/test_asset_fallback.js",
+    "tests/test_round2_representative_levels.js",
+    "R1.2_ROUND2_CHANGELOG.md",
+    "R1.2_ROUND2_TEST_REPORT.md",
+    "R1.2_ROUND2_ISSUES.json",
+    "local_round2_all_tests.log"
+  ]
+}

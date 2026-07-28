@@ -15,3 +15,15 @@ package-lock.json
 # OS junk
 Thumbs.db
 .DS_Store
+
+# Local test artifacts / caches (not part of the repo)
+__pycache__/
+tests/logs/
+*.bak.html
+assets_candidates/
+# Phase 1/2 本地核验产物 (非本轮交付)
+local_run_all_tests.log
+local_alpha2_test.log
+local_file_inventory.txt
+local_git_status.txt
+current_commit.txt

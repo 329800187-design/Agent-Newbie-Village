@@ -1,0 +1,677 @@
+==============================================================
+Agent新手村 v1.0 骨架 — 统一测试入口 run_all_tests.py
+归档根目录: /Users/mac/WorkBuddy/2026-07-28-20-14-07/Agent-Newbie-Village
+开始时间: 2026-07-29 04:47:39
+==============================================================
+
+── 环境检查 ──
+[PASS] 1. Python 版本检查 (>=3.10)  (Python 3.13.12)
+[PASS] 2. Node 版本检查 (>=18)  (v22.22.2)
+[PASS] 3. Pillow 检查  (Pillow 12.3.0)
+[PASS] 4. playwright-core 检查  (playwright-core 1.61.1)
+[PASS] 5. Chromium/Edge/Chrome 检查  (/Users/mac/Library/Caches/ms-playwright/chromium-1228/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing)
+
+── 骨架构建 ──
+[PASS] 6. build_release.py --skeleton
+       退出码=0  耗时=0.2s
+------ 完整输出 ------
+==============================================================
+Agent新手村 构建脚本 v5 [骨架构建 --skeleton]
+BASE_DIR = /Users/mac/WorkBuddy/2026-07-28-20-14-07/Agent-Newbie-Village
+==============================================================
+
+[0] 权威源: Agent新手村_当前版.html (556,449B)
+  [OK] var TEST_MODE 声明唯一命中 (1)
+  [OK] 权威源 TEST_MODE=false (硬门禁: true 时构建退出非零)
+  [OK] BUILD_TAG='当前版'
+  [OK] node --check: PASS
+  [OK] LevelData 74 关 (74)
+  [OK] core 70 (70)
+  [OK] optional 4 (4)
+  [OK] WORLDS 8 世界 (8)
+  [OK] boss 8 (8)
+  [OK] lessonCycle 仅 C07/C08 试点 (['w1_2', 'w1_3'])
+  [OK] C07 标题 (看看周围)
+  [OK] C08 标题 (去别的地方)
+  [课程哈希] 56860b8325375125f0950398fe512ab8fa9795e7087e30fe6bbf5a8f68965895
+  [OK] 关键函数 isLevelUnlocked
+  [OK] 关键函数 _realUnlocked
+  [OK] 关键函数 getWorldCoreLevels
+  [OK] 关键函数 getNextCoreLevel
+  [OK] 关键函数 isWorldComplete
+  [OK] 关键函数 getLockedReason
+  [OK] 关键函数 _checkFlowGate
+  [OK] 关键函数 finalPassedAt
+  [OK] 关键函数 buildFinalRecord
+  [OK] 关键函数 defaultLearnerProfile
+  [OK] 关键函数 normalizeLearnerProfile
+  [OK] 关键函数 recommendLearningTrack
+  [OK] 关键函数 computeAssessmentScores
+  [OK] 关键函数 _trackTrialUnlockOk
+  [OK] 关键函数 migrateSaveData
+  [OK] 关键函数 hasAnyLevelProgress
+  [OK] 关键函数 resetLevelScroll
+  [OK] 关键函数 lcProbe
+  [OK] 关键函数 lcReinforce
+  [OK] 引擎对象 Sim={
+  [OK] 引擎对象 WfSim={
+  [OK] 引擎对象 LearningTracks={
+  [OK] 引擎对象 Onboard={
+  [OK] 引擎对象 TrackPanel={
+  [OK] 引擎对象 TrackUI={
+  [OK] 引擎对象 AssessmentQuestions=[
+  [OK] 引擎对象 lessonCycle:{probe:
+  [OK] SCHEMA_VERSION=3
+  [OK] TestPanel 在 TEST_MODE 守卫内
+  [OK] Level.skip TEST_MODE 守卫
+  [OK] normalizeLearnerProfile 强制 role
+  [OK] WORLD_TRIALS_ENABLED=false
+  [OK] _trackTrialUnlockOk 入口闸门
+  [OK] _completing 防重复
+  [OK] Cert.goNext/backMap
+  [OK] lc-probe-opts
+  [OK] .opt.selected CSS
+  [OK] WorkflowTemplates 存在
+  [OK] Artifact 存在
+  [OK] Export 存在
+  [OK] LearningLog 存在
+  [OK] LevelValidator 存在
+  [OK] Artifact.saveLevel 存在
+  [OK] done() 不再调用 Artifact.saveAll
+  [OK] 设置页含学习记录清除
+  [OK] _checkFlowGate 支持 completionGate
+  [OK] 无 masteryRequired:true 布尔值
+  [OK] masteryRequired 为数组格式
+  [OK] InfoCard 无 Boss 标签硬编码
+  [OK] Boss 标签统一读 WORLDS[world].boss
+  [OK] 青少模式 pickMode 守卫
+  [OK] 青少卡禁用样式
+  [OK] 青少「即将开放」文案
+  [OK] confirmTrack foundation 守卫
+  [OK] confirmTrack 只进入 beginner
+  [OK] ageMode 不写入 youth
+  [OK] switchTrack foundation 守卫
+  [OK] 「世界试炼开发中」口径
+  [OK] 无旧口径残留
+  [OK] 入村插画接口 K01
+  [OK] 入村插画接口 K02
+  [OK] 入村插画接口 K03
+  [OK] ageMode schema 字段保留
+  [OK] 试炼预留字段保留
+  [OK] 无动画假开关
+  [OK] 设置页重置按钮保留
+  [OK] 无外部CDN依赖
+
+  --- 资源清单校验 (assets/asset_manifest.json) ---
+  [OK] asset_manifest.json 存在
+  [OK] manifest 条目非空 (172 条)
+  [OK] manifest 无重复 path (重复: 无)
+  [OK] status 枚举合法 (非法: 无)
+  [OK] required 资源全部存在 (缺失 0: 无)
+  [OK] 零字节资源=0 (违规: 无)
+  [OK] 路径大小写完全一致 (违规: 无)
+  [OK] 图片全部可解码 (违规: 无)
+  [OK] 宽高符合类型要求 (违规: 无)
+  [OK] 运行时引用全部收录于 manifest (漏项 0: 无)
+  [OK] manifest required 均为真实运行时引用 (虚标: 无)
+  [统计] final=63 placeholder=108 candidate=1 deprecated=0 / required=170
+
+  --- 骨架闸门 ---
+  [OK] skeleton 闸门: 允许 placeholder (108 个), candidate 不进用户包 (1 个)
+  [OK] 开发版 TEST_MODE 声明替换唯一命中 (1)
+  [OK] 开发版 TEST_MODE=true
+  [OK] 当前版 vs 开发测试版 归一化一致
+  [OK] 当前版 vs 发布候选版 归一化一致
+  [OK] W6 scenarios 含 interactionId
+  [OK] W7 scenarios 含 interactionId
+  [OK] builderIndex 替代 bsIdx
+  [OK] bsIdx 已彻底移除
+  [OK] 显式 markInteractionPassed agent_builder
+  [OK] WfSim.init workflow_builder
+  [OK] reset 含 agent_village_artifacts
+  [OK] reset 含 agent_village_learning_log
+  [OK] W6 Boss 无答案符号泄露
+  [OK] 设置页含查看学习记录
+  [OK] 设置页含清除学习记录
+  [OK] LearningLog.showReport 已实现
+  [OK] README_使用说明.txt 存在
+  [OK] CHANGELOG_v1.0.txt 存在
+  [OK] README 已声明骨架预览版
+  [OK] 用户包: Agent新手村_v1.0_骨架预览版.zip (204,748B, 176 条目)
+  [OK] candidate/deprecated 已排除 1 项不进用户包
+
+  --- SHA256 ---
+  当前版: a8f1821295dd4f763157d3764e494a9b0d9d32cb2fc483390bc3ff551a2a797d
+  开发测试版: dac373a5f2c4fd4ba4751f7fb84a490a4112ceeb089fb8ff0b57864b1e31620c
+  发布候选版: 77a0189513c12835bb82f2c8ffcb2eac28cac370c7024ec551122c070a140073
+  Agent新手村_v1.0_骨架预览版.zip: ecaff57695eeca3bfce4fe09ce4471206c3e21544973ff421ba4852085608797
+  课程数据: 56860b8325375125f0950398fe512ab8fa9795e7087e30fe6bbf5a8f68965895
+
+==============================================================
+✅ 骨架构建成功 — Agent新手村 v1.0 功能骨架（非正式发布）
+  素材: final=63 / placeholder=108 / candidate=1(未打包) / deprecated=0(未打包)
+  关卡: 74 / 70core / 4optional / 8世界
+==============================================================
+----------------------
+
+── Python 测试 ──
+[PASS] 7. test_static_integrity.py
+       退出码=0  耗时=0.1s
+------ 完整输出 ------
+LevelData 条目: 74
+  PASS: 总量 74
+  PASS: core 70
+  PASS: optional 4
+  PASS: boss 8
+  PASS: 世界数 8
+  PASS: 无重复ID
+  PASS: 全有标题
+  PASS: flow 'talk'
+  PASS: flow 'try'
+  PASS: flow 'cmd'
+  PASS: flow 'sequence'
+  PASS: flow 'trace'
+  PASS: flow 'blocks'
+  PASS: flow 'locate'
+  PASS: flow 'builder'
+  PASS: flow 'lessonCycle'
+  PASS: flow 'simulation'
+  PASS: lessonCycle 恰好2关
+  PASS: C07=看看周围
+  PASS: C08=去别的地方
+
+流类型: {'talk': 387, 'try': 176, 'cmd': 19, 'lessonCycle': 2, 'blocks': 8, 'trace': 9, 'sequence': 27, 'locate': 8, 'builder': 11, 'simulation': 2}
+==================================================
+ALL PASS
+----------------------
+[PASS] 8. test_asset_manifest.py
+       退出码=0  耗时=0.2s
+------ 完整输出 ------
+[提示] 未指定构建模式。当前阶段只允许骨架构建，默认 --skeleton。
+  [PASS] assets/asset_manifest.json 存在
+  [PASS] statusEnum 四值
+  [PASS] zipPolicy.skeleton = final+placeholder
+  [PASS] zipPolicy.release = final
+  [PASS] 每条含必备字段 (缺字段: 无)
+  [PASS] status 全部合法
+  [PASS] 覆盖 assets/splash/ (2 条)
+  [PASS] 覆盖 assets/onboard/ (3 条)
+  [PASS] 覆盖 assets/peipei/ (1 条)
+  [PASS] 覆盖 assets/kuro/ (1 条)
+  [PASS] 覆盖 assets/nodes/ (70 条)
+  [PASS] 覆盖 assets/done/ (70 条)
+  [PASS] 覆盖 assets/bg/ (8 条)
+  [PASS] 覆盖 assets/boss/ (8 条)
+  [PASS] 覆盖 assets/cert/ (8 条)
+  [PASS] 覆盖 assets/ui/ (1 条)
+  [PASS] K01: required + placeholder
+  [PASS] K02: required + placeholder
+  [PASS] K03: required + placeholder
+  [PASS] J02.png 唯一规范文件 status=final
+  [PASS] J02_1 已移出 assets/splash/
+  [PASS] assets_candidates/splash/ 含 6 个 J02 候选 (6)
+  [PASS] manifest 不含 J02_x 候选 (无)
+
+  --- 资源清单校验 (assets/asset_manifest.json) ---
+  [OK] asset_manifest.json 存在
+  [OK] manifest 条目非空 (172 条)
+  [OK] manifest 无重复 path (重复: 无)
+  [OK] status 枚举合法 (非法: 无)
+  [OK] required 资源全部存在 (缺失 0: 无)
+  [OK] 零字节资源=0 (违规: 无)
+  [OK] 路径大小写完全一致 (违规: 无)
+  [OK] 图片全部可解码 (违规: 无)
+  [OK] 宽高符合类型要求 (违规: 无)
+  [OK] 运行时引用全部收录于 manifest (漏项 0: 无)
+  [OK] manifest required 均为真实运行时引用 (虚标: 无)
+  [统计] final=63 placeholder=108 candidate=1 deprecated=0 / required=170
+  [PASS] build_release.verify_manifest 全量校验通过 (存在/非零/大小写/解码/宽高/重复/漏项)
+  [PASS] 课程数据哈希与基线一致 (56860b8325375125...)
+
+== test_asset_manifest: 25 pass / 0 fail — ALL PASS ==
+----------------------
+[PASS] 9. test_skeleton_build.py
+       退出码=0  耗时=0.3s
+------ 完整输出 ------
+  [PASS] --skeleton 退出码 0 (实际 0)
+  [PASS] 报告宣布骨架构建成功
+  [PASS] 报告未错误宣布正式发布
+  [PASS] 报告含 final= 计数
+  [PASS] 报告含 placeholder= 计数
+  [PASS] 报告含 candidate= 计数
+  [PASS] 骨架 ZIP 存在且非零 (204,748B)
+  [PASS] ZIP 含 Agent新手村.html
+  [PASS] ZIP 含 README_使用说明.txt
+  [PASS] ZIP 含 CHANGELOG_v1.0.txt
+  [PASS] ZIP 含 assets/asset_manifest.json
+  [PASS] ZIP 含 checksums_internal.sha256
+  [PASS] ZIP 内素材全部为 final/placeholder (违规: 无)
+  [PASS] required 资源全部入包 (缺: 无)
+  [PASS] 候选素材未混入 (无)
+  [PASS] 包内 HTML TEST_MODE=false
+  [PASS] 包内 README 声明骨架预览版
+  [PASS] checksums_internal.sha256 抽样校验一致
+  [PASS] checksums_internal 覆盖 ZIP 内全部其他文件
+
+== test_skeleton_build: 19 pass / 0 fail — ALL PASS ==
+----------------------
+[PASS] 10. test_release_gate.py
+       退出码=0  耗时=0.5s
+------ 完整输出 ------
+  [PASS] 前置: 当前存在 108 个 placeholder (发布闸门应拦截)
+  [PASS] --release 在有 placeholder 时退出非零 (实际 1)
+  [PASS] 失败原因明确指向 placeholder 闸门
+  [PASS] 未生成/未改动正式 ZIP (前 None == 后 None)
+  [PASS] 未错误宣布正式发布成功
+  [PASS] 同一状态下 --skeleton 成功 (实际 0)
+  [PASS] 骨架构建报告正常
+
+== test_release_gate: 7 pass / 0 fail — ALL PASS ==
+----------------------
+[PASS] 11. test_release_zip_idempotence.py
+       退出码=0  耗时=0.5s
+------ 完整输出 ------
+  [PASS] 第 1 轮 --skeleton 退出码 0 (实际 0)
+    round1: 当前版.html=a8f1821295dd | 开发测试版.ht=dac373a5f2c4 | 发布候选版.ht=77a0189513c1 | 骨架预览版.zi=ecaff57695ee
+  [PASS] 第 2 轮 --skeleton 退出码 0 (实际 0)
+    round2: 当前版.html=a8f1821295dd | 开发测试版.ht=dac373a5f2c4 | 发布候选版.ht=77a0189513c1 | 骨架预览版.zi=ecaff57695ee
+  [PASS] 两轮哈希一致: Agent新手村_当前版.html (a8f1821295dd4f76...)
+  [PASS] 两轮哈希一致: Agent新手村_开发测试版.html (dac373a5f2c4fd4b...)
+  [PASS] 两轮哈希一致: Agent新手村_v1.0_发布候选版.html (77a0189513c12835...)
+  [PASS] 两轮哈希一致: Agent新手村_v1.0_骨架预览版.zip (ecaff57695eeca3b...)
+
+== test_release_zip_idempotence: 6 pass / 0 fail — ALL PASS ==
+两轮构建SHA256记录:
+  Agent新手村_当前版.html: a8f1821295dd4f763157d3764e494a9b0d9d32cb2fc483390bc3ff551a2a797d
+  Agent新手村_开发测试版.html: dac373a5f2c4fd4ba4751f7fb84a490a4112ceeb089fb8ff0b57864b1e31620c
+  Agent新手村_v1.0_发布候选版.html: 77a0189513c12835bb82f2c8ffcb2eac28cac370c7024ec551122c070a140073
+  Agent新手村_v1.0_骨架预览版.zip: ecaff57695eeca3bfce4fe09ce4471206c3e21544973ff421ba4852085608797
+----------------------
+
+── Node 测试 ──
+[PASS] 12. test_save_migration.js
+       退出码=0  耗时=0.1s
+------ 完整输出 ------
+PASS: 空存档 returns null/undefined
+PASS: 完全空存档 {}
+PASS: 旧schema (schemaVersion:1)
+PASS: 缺learnerProfile
+PASS: role=guardian强制转learner
+PASS: 非法learningTrack
+PASS: XP为字符串
+PASS: 重复achievements
+PASS: 未知关卡ID
+PASS: 损坏JSON 不崩溃
+PASS: SCHEMA_VERSION=3
+PASS: 迁移幂等
+PASS: 不凭空增加XP
+PASS: 不凭空完成关卡
+
+=== Result: 14 PASS / 0 FAIL ===
+----------------------
+[PASS] 13. test_unlock_chain.js
+       退出码=0  耗时=0.1s
+------ 完整输出 ------
+PASS: State/Game 有初始化逻辑
+PASS: WORLD_TRIALS_ENABLED=false
+Core levels in order: ai_camp_1 → ai_camp_2 → ai_camp_3 → ai_camp_4 → ai_camp_5 → ai_camp_6 → ai_camp_7 → ai_camp_8 → ai_camp_9 → ai_camp_10 → ai_camp_11 → w1_1 → w1_2 → w1_3 → w1_4 → w1_5 → w1_6 → w1_7 → w1_8 → w2_1 → w2_2 → w2_3 → w2_4 → w2_5 → w2_6 → w3_1 → w3_2 → w3_3 → w3_4 → w3_5 → w3_6 → w3_7 → w3_8 → w3_9 → w3_10 → w3_11 → w3_12 → w3_13 → w4_1 → w4_2 → w4_3 → w4_4 → w4_5 → w4_6 → w4_7 → w4_8 → w5_1 → w5_2 → w5_3 → w5_4 → w5_5 → w5_6 → w5_7 → w5_8 → w6_1 → w6_2 → w6_3 → w6_4 → w6_5 → w6_6 → w6_7 → w6_8 → w6_9 → w7_1 → w7_2 → w7_3 → w7_4 → w7_5 → w7_6 → w7_7
+PASS: 初始首关: ai_camp_1
+PASS: Boss ai_camp_11 存在且标记为boss
+PASS: Boss w1_8 存在且标记为boss
+PASS: Boss w2_6 存在且标记为boss
+PASS: Boss w3_13 存在且标记为boss
+PASS: Boss w4_8 存在且标记为boss
+PASS: Boss w5_8 存在且标记为boss
+PASS: Boss w6_9 存在且标记为boss
+PASS: Boss w7_7 存在且标记为boss
+PASS: World ai_camp: 11 个core关
+PASS: World ai_camp: 首关 ai_camp_1 存在
+PASS: World w1: 8 个core关
+PASS: World w1: 首关 w1_1 存在
+PASS: World w2: 6 个core关
+PASS: World w2: 首关 w2_1 存在
+PASS: World w3: 13 个core关
+PASS: World w3: 首关 w3_1 存在
+PASS: World w4: 8 个core关
+PASS: World w4: 首关 w4_1 存在
+PASS: World w5: 8 个core关
+PASS: World w5: 首关 w5_1 存在
+PASS: World w6: 9 个core关
+PASS: World w6: 首关 w6_1 存在
+PASS: World w7: 7 个core关
+PASS: World w7: 首关 w7_1 存在
+PASS: w7_7 是最终Boss
+PASS: 74关总量
+PASS: lessonCycle 仅 2 关 (未批量扩展)
+
+=== Result: 30 PASS / 0 FAIL ===
+----------------------
+[PASS] 14. test_c07_c08.js
+       退出码=0  耗时=0.1s
+------ 完整输出 ------
+PASS: C07 存在
+PASS: C07 标题: 看看周围
+PASS: C07 有 lessonCycle
+PASS: C07 探针不扣星 (lessonCycle只是教学)
+PASS: C08 存在
+PASS: C08 标题: 去别的地方
+PASS: C08 有 lessonCycle
+PASS: resetLevelScroll 存在
+PASS: lcProbe 存在
+PASS: lcReinforce 存在
+PASS: _completing 防重复标记存在
+PASS: Cert.goNext 存在
+PASS: Cert.backMap 存在
+PASS: Cert.show 存在
+PASS: .opt.selected CSS 存在
+PASS: lc-probe-opts class 存在
+PASS: lessonCycle 仅 w1_2 + w1_3
+
+=== Result: 17 PASS / 0 FAIL ===
+----------------------
+[PASS] 15. test_w6_gate.js
+       退出码=0  耗时=0.1s
+------ 完整输出 ------
+PASS: Sim 对象存在
+PASS: Sim.commitConfig 存在
+PASS: Sim.invalidateCurrentConfig 存在
+PASS: Sim.isCurrentRevisionPassed 存在
+PASS: Sim.editConfig 存在
+PASS: w6_9 存在
+PASS: w6_9 是boss
+PASS: Sim.saveDraft 包含 finalPassedAt
+PASS: Sim._blank 包含 finalPassedAt
+PASS: Sim.editConfig() 引用数: 2 (应为2: 1定义+1UI)
+PASS: builderCheck 无 Sim.editConfig 注入
+PASS: w6_9 包含 builder flow
+PASS: w6_9 包含 simulation flow
+
+=== Result: 13 PASS / 0 FAIL ===
+----------------------
+[PASS] 16. test_w7_gate.js
+       退出码=0  耗时=0.1s
+------ 完整输出 ------
+PASS: WfSim 对象存在
+PASS: WfSim.commitConfig 存在
+PASS: WfSim.invalidateCurrentConfig 存在
+PASS: WfSim.isCurrentRevisionPassed 存在
+PASS: WfSim.renderPanel 存在
+PASS: w7_7 存在
+PASS: w7_7 是boss
+PASS: WfSim.saveDraft 包含 finalPassedAt
+PASS: WfSim._blank 包含 finalPassedAt
+PASS: w7_7 包含 sequence flow
+PASS: w7_7 包含 builder flow
+PASS: w7_7 包含 simulation flow
+PASS: w7_7 是最终Boss（第8世界最后一关）
+PASS: WfSim.renderPanel setTimeout 保留
+
+=== Result: 14 PASS / 0 FAIL ===
+----------------------
+[PASS] 17. test_runtime_assets.js
+       退出码=0  耗时=11.2s
+------ 完整输出 ------
+  [PASS] LevelData 共 74 关 (实际 74)
+  [PASS] 74 关全部渲染成功 (失败 0: 无)
+  [PASS] required 资源 170 项全部自然宽高>0 (失败: 无)
+  [PASS] 入村插画 K01 浏览器加载成功
+  [PASS] 入村插画 K02 浏览器加载成功
+  [PASS] 入村插画 K03 浏览器加载成功
+  [PASS] Boss 备用标签 w3_13 → D04 (undefined残留: false)
+  [PASS] Boss 备用标签 w4_8 → D05 (undefined残留: false)
+  [PASS] Boss 备用标签 w5_8 → D06 (undefined残留: false)
+  [PASS] Boss 备用标签 w6_9 → D07 (undefined残留: false)
+  [PASS] Boss 备用标签 w7_7 → D08 (undefined残留: false)
+  [PASS] 页面无 D0undefined
+  [PASS] pageerror = 0 (实际 0: 无)
+  [PASS] requestfailed = 0 (实际 0: 无)
+  [PASS] 发布候选版 TEST_MODE=false (false)
+  [PASS] WORLD_TRIALS_ENABLED=false (false)
+  [PASS] 初始仅 ai_camp_1 解锁 (实际 ["ai_camp_1"])
+  [PASS] 发布候选版 pageerror = 0 (0)
+  [PASS] 发布候选版 requestfailed = 0 (0)
+
+== test_runtime_assets: 19 pass / 0 fail — ALL PASS ==
+----------------------
+[PASS] 18. test_onboarding.js
+       退出码=0  耗时=9.3s
+------ 完整输出 ------
+  [PASS] 新用户进入 mode 步 (mode)
+  [PASS] 青少卡带 ob-card-disabled 禁用样式
+  [PASS] 青少卡显示「即将开放」
+  [PASS] 点击青少卡后仍停留 mode 步 (mode)
+  [PASS] pickMode('youth') 被守卫 (step=mode, mode=standard)
+  [PASS] 标准模式点击进入 basis 步 (basis)
+  [PASS] 答完 8 题进入 result 步 (result)
+  [PASS] 低分推荐 beginner (beginner)
+  [PASS] 五维能力条渲染 5 条 (5)
+  [PASS] beginner 确认按钮存在
+  [PASS] foundation 按钮禁用, 文案含「世界试炼」与「开发中」或「暂不可用」(🚧 有基础挑战线（世界试炼功能开发中，暂不可用）)
+  [PASS] 结果页无 foundation 确认入口
+  [PASS] confirmTrack('foundation') 被守卫→beginner (beginner)
+  [PASS] onboarding 正常完成
+  [PASS] ageMode 未写入 youth (standard)
+  [PASS] 五维分数已记录进档案
+  [PASS] 高分推荐 foundation (foundation)
+  [PASS] 高分结果页显示「世界试炼开发中」说明
+  [PASS] 确认入口全部只指向 beginner (confirmTrack('beginner'))
+  [PASS] 高分用户最终进入 beginner (beginner)
+  [PASS] 推荐结果 foundation 仍如实记录 (foundation)
+  [PASS] 老用户进入 gate 升级步 (gate)
+  [PASS] gate 步渲染 K01 插画
+  [PASS] 旧档 XP/星星保留 (xp=120, stars=9)
+  [PASS] 旧档通关记录保留
+  [PASS] currentLevel 被 _validateCurrentLevel 校正到合法前沿 (ai_camp_2)
+  [PASS] 老用户 keepProgress → beginner (beginner)
+  [PASS] schemaVersion 迁移到 3 (3)
+  [PASS] TrackPanel 显示「世界试炼开发中」
+  [PASS] TrackPanel foundation 方向按钮禁用
+  [PASS] TrackPanel 无可点击的 foundation 切换入口
+  [PASS] switchTrack() 被守卫, 仍为 beginner (beginner)
+  [PASS] 旧 foundation 档案载入不被改写 (foundation)
+  [PASS] foundation 旧档进度保留 (xp=120)
+  [PASS] foundation 用户可切回零基础成长线 (按钮可用)
+  [PASS] 全程 pageerror = 0 (0)
+
+== test_onboarding: 36 pass / 0 fail — ALL PASS ==
+----------------------
+[PASS] 19. test_w6_e2e.js
+       退出码=0  耗时=3.5s
+------ 完整输出 ------
+  [PASS] 页面加载无 JS 错误 (0 errors)
+  [PASS] 存档注入成功
+  [PASS] 当前关卡为 w6_9: w6_9
+  [PASS] Sim 对象存在
+  [PASS] 配置状态: submitted
+  [PASS] 场景 normal 通过
+  [PASS] 场景 missing-info 通过
+  [PASS] 场景 high-risk 通过
+  [PASS] interactionPassed: agent_builder=true
+  [PASS] interactionPassed: scenario_normal=true
+  [PASS] interactionPassed: scenario_missing_info=true
+  [PASS] interactionPassed: scenario_high_risk=true
+  [PASS] W6 草稿已持久化
+  [PASS] 草稿 configStatus=submitted
+  [PASS] 全程无 JS 异常 (0 errors, [])
+
+== W6 E2E: 15 pass / 0 fail — ALL PASS ==
+----------------------
+[PASS] 20. test_w7_e2e.js
+       退出码=0  耗时=5.1s
+------ 完整输出 ------
+  [PASS] W7 存档注入成功
+  [PASS] 当前关卡为 w7_7: w7_7
+  [PASS] WfSim 对象存在
+  [PASS] interactionPassed: workflow_sequence=true
+  [PASS] W7 配置状态: submitted
+  [PASS] interactionPassed: workflow_builder=true
+  [PASS] 场景 normal 通过
+  [PASS] 场景 high-amount 通过
+  [PASS] 场景 tool-fail 通过
+  [PASS] interactionPassed: workflow_sequence=true (got: true)
+  [PASS] interactionPassed: workflow_builder=true (got: true)
+  [PASS] interactionPassed: scenario_normal=true (got: true)
+  [PASS] interactionPassed: scenario_high_amount=true (got: true)
+  [PASS] interactionPassed: scenario_tool_fail=true (got: true)
+  [PASS] finalPassedAt 已设置: 1785271689133
+  [PASS] W7 草稿已持久化
+  [PASS] W7 草稿 configStatus=submitted
+  [PASS] 刷新后 w7_7 仍解锁
+  [PASS] 全程无 JS 异常 (0 errors)
+
+== W7 E2E: 19 pass / 0 fail — ALL PASS ==
+----------------------
+
+── Round2 新增测试 (R1.2 骨架扩展) ──
+[PASS] 21. test_level_experience_registry.js
+       退出码=0  耗时=1.8s
+------ 完整输出 ------
+  [PASS] 课程数据哈希不变 (round2-dev=56860b8325375125… 目标=56860b8325375125…)
+  [PASS] 课程仍为 74 关 (74)
+  [PASS] core 仍为 70 (70)
+  [PASS] LevelExperienceRegistry 为对象且已暴露到 window
+  [PASS] 注册表恰含 7 个代表关卡 (ai_camp_1,w1_1,w3_13,w4_4,w4_7,w6_9,w7_7)
+  [PASS] LevelData 未被注册表改动, 仍 74 关 (74)
+  [PASS] ai_camp_1 含完整体验元数据(templateType/taskBrief/completionCriteria/capabilitySummary/nextReason)
+  [PASS] w1_1 含完整体验元数据(templateType/taskBrief/completionCriteria/capabilitySummary/nextReason)
+  [PASS] w3_13 含完整体验元数据(templateType/taskBrief/completionCriteria/capabilitySummary/nextReason)
+  [PASS] w4_4 含完整体验元数据(templateType/taskBrief/completionCriteria/capabilitySummary/nextReason)
+  [PASS] w4_7 含完整体验元数据(templateType/taskBrief/completionCriteria/capabilitySummary/nextReason)
+  [PASS] w6_9 含完整体验元数据(templateType/taskBrief/completionCriteria/capabilitySummary/nextReason)
+  [PASS] w7_7 含完整体验元数据(templateType/taskBrief/completionCriteria/capabilitySummary/nextReason)
+  [PASS] ai_camp_1 / w1_1 → normal 层
+  [PASS] w3_13 / w4_4 / w4_7 / w6_9 → capability 层
+  [PASS] w7_7 → world 层
+  [PASS] w3_13 含 阅读顺序/变量变化/分支循环/最终输出
+  [PASS] w4_4 含 程序在哪运行/环境包含什么/为何环境不同
+  [PASS] w4_7 含 看到的错误/可能原因/排查顺序/修复动作/修复后验证
+  [PASS] w6_9 / w7_7 keepGate + gateNote 保留
+  [PASS] w7_7 含 worldName/capabilityList/realTask/nextPurpose（world 层）
+  [PASS] pageerror = 0 (0)
+
+== test_level_experience_registry: 22 pass / 0 fail — ALL PASS ==
+----------------------
+[PASS] 22. test_completion_tiers.js
+       退出码=0  耗时=1.7s
+------ 完整输出 ------
+  [PASS] Completion 已暴露到 window
+  [PASS] 四级完成反馈齐全 (normal/capability/boss/world)
+  [PASS] tier=normal 弹窗激活
+  [PASS] tier=normal 标题正确 (这一关完成了)
+  [PASS] tier=normal 图标正确 (🎉)
+  [PASS] tier=normal 继续按钮文案 (继续学习)
+  [PASS] tier=normal 按钮数符合(allowClose→2) (实际 1)
+  [PASS] tier=capability 弹窗激活
+  [PASS] tier=capability 标题正确 (关键能力 get！)
+  [PASS] tier=capability 图标正确 (🚀)
+  [PASS] tier=capability 继续按钮文案 (下一关)
+  [PASS] tier=capability 按钮数符合(allowClose→2) (实际 1)
+  [PASS] tier=boss 弹窗激活
+  [PASS] tier=boss 标题正确 (Boss 通关)
+  [PASS] tier=boss 图标正确 (🏆)
+  [PASS] tier=boss 继续按钮文案 (进入下一世界)
+  [PASS] tier=boss 按钮数符合(allowClose→2) (实际 2)
+  [PASS] tier=world 弹窗激活
+  [PASS] tier=world 标题正确 (世界通关！)
+  [PASS] tier=world 图标正确 (🌟)
+  [PASS] tier=world 继续按钮文案 (继续学习)
+  [PASS] tier=world 按钮数符合(allowClose→2) (实际 2)
+  [PASS] 每次 show+click 仅触发一次 onContinue (实际 1)
+  [PASS] Completion 含 _submitted 防重复提交守卫
+  [PASS] hide() 后弹窗非激活
+
+== test_completion_tiers: 25 pass / 0 fail — ALL PASS ==
+----------------------
+[PASS] 23. test_asset_fallback.js
+       退出码=0  耗时=1.6s
+------ 完整输出 ------
+  [PASS] AssetRegistry 已暴露到 window
+  [PASS] AssetRegistry 含 9 个素材分类桶(splash/onboard/character/node/done/background/boss/certificate/ui)
+  [PASS] AssetRegistry 含 get/exists/fallback/render 方法
+  [PASS] 已注册素材 get 返回 ok+src (splash/J01)
+  [PASS] 已注册素材 render 返回 <img> 标签
+  [PASS] 未注册素材 exists=false
+  [PASS] fallback 含素材 id 与分类用途文案
+  [PASS] fallback 无 undefined、无 <img>(不会破图)
+  [PASS] render(未注册) 返回占位(无破图、含 id 与用途)
+
+== test_asset_fallback: 9 pass / 0 fail — ALL PASS ==
+----------------------
+[PASS] 24. test_round2_representative_levels.js
+       退出码=0  耗时=5.1s
+------ 完整输出 ------
+  [PASS] ai_camp_1 在 LevelData 中(未被 Round2 改动)
+  [PASS] ai_camp_1 在 LevelExperienceRegistry 中
+  [PASS] ai_camp_1 渲染后注入体验面板 #r2-lev-exp
+  [PASS] ai_camp_1 面板含 当前任务/为什么要做/完成标准/小黑提示/当前操作区
+  [PASS] w1_1 在 LevelData 中(未被 Round2 改动)
+  [PASS] w1_1 在 LevelExperienceRegistry 中
+  [PASS] w1_1 渲染后注入体验面板 #r2-lev-exp
+  [PASS] w1_1 面板含 当前任务/为什么要做/完成标准/小黑提示/当前操作区
+  [PASS] w3_13 在 LevelData 中(未被 Round2 改动)
+  [PASS] w3_13 在 LevelExperienceRegistry 中
+  [PASS] w3_13 渲染后注入体验面板 #r2-lev-exp
+  [PASS] w3_13 面板含 当前任务/为什么要做/完成标准/小黑提示/当前操作区
+  [PASS] w3_13 专属高亮模块已呈现
+  [PASS] w4_4 在 LevelData 中(未被 Round2 改动)
+  [PASS] w4_4 在 LevelExperienceRegistry 中
+  [PASS] w4_4 渲染后注入体验面板 #r2-lev-exp
+  [PASS] w4_4 面板含 当前任务/为什么要做/完成标准/小黑提示/当前操作区
+  [PASS] w4_4 专属高亮模块已呈现
+  [PASS] w4_7 在 LevelData 中(未被 Round2 改动)
+  [PASS] w4_7 在 LevelExperienceRegistry 中
+  [PASS] w4_7 渲染后注入体验面板 #r2-lev-exp
+  [PASS] w4_7 面板含 当前任务/为什么要做/完成标准/小黑提示/当前操作区
+  [PASS] w4_7 专属高亮模块已呈现
+  [PASS] w6_9 在 LevelData 中(未被 Round2 改动)
+  [PASS] w6_9 在 LevelExperienceRegistry 中
+  [PASS] w6_9 渲染后注入体验面板 #r2-lev-exp
+  [PASS] w6_9 面板含 当前任务/为什么要做/完成标准/小黑提示/当前操作区
+  [PASS] w7_7 在 LevelData 中(未被 Round2 改动)
+  [PASS] w7_7 在 LevelExperienceRegistry 中
+  [PASS] w7_7 渲染后注入体验面板 #r2-lev-exp
+  [PASS] w7_7 面板含 当前任务/为什么要做/完成标准/小黑提示/当前操作区
+  [PASS] ai_camp_1 done() 触发统一完成弹窗
+  [PASS] ai_camp_1 完成弹窗 tier=normal (normal)
+  [PASS] ai_camp_1 完成弹窗标题正确 (这一关完成了)
+  [PASS] w6_9 未通过验收时 done() 不弹出完成弹窗(门禁保留)
+  [PASS] w7_7 未通过验收时 done() 不弹出完成弹窗(门禁保留)
+  [PASS] 原始 w6_9 / w7_7 门禁代码未被 Round2 改动
+  [PASS] w6_9 / w7_7 keepGate 标记保留
+  [PASS] 渲染 7 代表关 pageerror = 0 (0)
+  [PASS] 渲染 7 代表关 requestfailed = 0 (0)
+
+== test_round2_representative_levels: 40 pass / 0 fail — ALL PASS ==
+----------------------
+
+==============================================================
+汇总:
+  [PASS] 1. Python 版本检查 (>=3.10)  (退出码=0, 0.0s)
+  [PASS] 2. Node 版本检查 (>=18)  (退出码=0, 0.0s)
+  [PASS] 3. Pillow 检查  (退出码=0, 0.0s)
+  [PASS] 4. playwright-core 检查  (退出码=0, 0.0s)
+  [PASS] 5. Chromium/Edge/Chrome 检查  (退出码=0, 0.0s)
+  [PASS] 6. build_release.py --skeleton  (退出码=0, 0.2s)
+  [PASS] 7. test_static_integrity.py  (退出码=0, 0.1s)
+  [PASS] 8. test_asset_manifest.py  (退出码=0, 0.2s)
+  [PASS] 9. test_skeleton_build.py  (退出码=0, 0.3s)
+  [PASS] 10. test_release_gate.py  (退出码=0, 0.5s)
+  [PASS] 11. test_release_zip_idempotence.py  (退出码=0, 0.5s)
+  [PASS] 12. test_save_migration.js  (退出码=0, 0.1s)
+  [PASS] 13. test_unlock_chain.js  (退出码=0, 0.1s)
+  [PASS] 14. test_c07_c08.js  (退出码=0, 0.1s)
+  [PASS] 15. test_w6_gate.js  (退出码=0, 0.1s)
+  [PASS] 16. test_w7_gate.js  (退出码=0, 0.1s)
+  [PASS] 17. test_runtime_assets.js  (退出码=0, 11.2s)
+  [PASS] 18. test_onboarding.js  (退出码=0, 9.3s)
+  [PASS] 19. test_w6_e2e.js  (退出码=0, 3.5s)
+  [PASS] 20. test_w7_e2e.js  (退出码=0, 5.1s)
+  [PASS] 21. test_level_experience_registry.js  (退出码=0, 1.8s)
+  [PASS] 22. test_completion_tiers.js  (退出码=0, 1.7s)
+  [PASS] 23. test_asset_fallback.js  (退出码=0, 1.6s)
+  [PASS] 24. test_round2_representative_levels.js  (退出码=0, 5.1s)
+==============================================================
+原 20/20 测试组: 全部通过 (20/20)
+Round2 新增测试: 全部通过 (4/4)
+==============================================================
+ALL TESTS PASS

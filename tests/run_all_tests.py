@@ -199,6 +199,23 @@ def main():
     for name, rel in node_tests:
         run_step(name, ["node", rel])
 
+    # ── 21-24 Round2 新增测试 (R1.2 骨架扩展, 独立小节, 不改变原 20/20) ──
+    round2_tests = [
+        ("21. test_level_experience_registry.js", "tests/test_level_experience_registry.js"),
+        ("22. test_completion_tiers.js", "tests/test_completion_tiers.js"),
+        ("23. test_asset_fallback.js", "tests/test_asset_fallback.js"),
+        ("24. test_round2_representative_levels.js", "tests/test_round2_representative_levels.js"),
+    ]
+    if pw_ok:
+        log("\n── Round2 新增测试 (R1.2 骨架扩展) ──")
+        for name, rel in round2_tests:
+            run_step(name, ["node", rel])
+    else:
+        for nm, _ in round2_tests:
+            RESULTS.append((nm, False, 1, 0.0))
+            log(f"[FAIL] {nm}")
+            log("       跳过: Chromium 不可用")
+
     return finish(args.log_name)
 
 
@@ -210,6 +227,19 @@ def finish(log_name):
         log(f"  [{'PASS' if ok else 'FAIL'}] {name}  (退出码={code}, {dt:.1f}s)")
         if not ok:
             failed += 1
+    log("=" * 62)
+
+    # 分组汇报: 原 20/20 与 Round2 新增 4 项 分开确认
+    orig = RESULTS[:20]
+    round2 = RESULTS[20:]
+    orig_fail = sum(1 for _, ok, _, _ in orig if not ok)
+    round2_fail = sum(1 for _, ok, _, _ in round2 if not ok)
+    log(f"原 20/20 测试组: {'全部通过' if orig_fail == 0 else str(orig_fail) + ' 项失败'} "
+        f"({sum(1 for _, ok, _, _ in orig if ok)}/{len(orig)})")
+    if round2:
+        log(f"Round2 新增测试: {'全部通过' if round2_fail == 0 else str(round2_fail) + ' 项失败'} "
+            f"({sum(1 for _, ok, _, _ in round2 if ok)}/{len(round2)})")
+
     log("=" * 62)
     if failed == 0:
         log("ALL TESTS PASS")
