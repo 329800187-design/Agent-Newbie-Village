@@ -25,7 +25,7 @@
       '能说清什么时候必须自己核实'
     ],
     capabilitySummary: '你已建立对 AI 的基本认知框架',
-    nextReason: '下一站「黑窗口村」：把认知落地，自己动手敲命令行',
+    nextReason: '下一关继续认识不同 AI 和大模型，逐步打牢 AI 基础认知。',
     cognitiveNote: 'AI“不是真的懂”——它只是在预测“下一个最可能出现的词”',
     splashId: 'J01',
     completionTier: 'normal'
@@ -41,7 +41,7 @@
       '操作完成后能看懂验证提示'
     ],
     capabilitySummary: '你已迈出终端操作第一步',
-    nextReason: '下一站「代码森林」：终端玩熟了，该学程序怎么思考',
+    nextReason: '下一关继续练习查看当前目录和文件内容，把终端基本动作练熟。',
     cmdEchoNote: '看终端要分两半：你敲的是“命令”，电脑回的是“结果”',
     splashId: 'J01',
     completionTier: 'normal'
@@ -119,8 +119,12 @@
     nextReason: '下一站「工作流工场」：把脚本+AI+人串成自动化流水线',
     keepGate: true,
     gateNote: '门禁不变：必须三个场景同版本全部通过，finalPassedAt 才会写入；缺任一都不算完成',
+    worldResult: '你为 Agent 配置了目标、工具、权限、停止条件与异常处理，并在 normal / missing-info / high-risk 三个真实场景全部通过验收。',
+    verifiedCapabilities: '定边界、设权限、配工具、验安全、控风险',
+    worldCert: 'Agent 指挥认证（W6 智能体工坊）',
+    nextWorldPreview: '下一站「工作流工场」：把脚本 + AI + 人串成自动化流水线。',
     splashId: 'J01',
-    completionTier: 'capability'
+    completionTier: 'boss'
   };
 
   LevelExperienceRegistry['w7_7'] = {
@@ -136,7 +140,7 @@
     nextReason: '这是最后一站——之后你就能用 AI 真正开始干活',
     keepGate: true,
     gateNote: '门禁不变：workflow_sequence 与 workflow_builder 通过、三场景同版本验收，finalPassedAt 才写入',
-    worldName: '智能体工坊',
+    worldName: '工作流工场',
     capabilityList: '配置 Agent、设计工作流、三场景验收、带审批/重试/验收的自动化',
     realTask: '给“订单→库存→补货建议”这类流程配一条带人工确认的工作流',
     nextPurpose: '理解程序从代码到运行的完整链路之后，你能独立设计可投产的 AI 工作流',
@@ -146,6 +150,10 @@
 
   /* ------------------------------------------------------------------
    * 2) AssetRegistry —— 素材注册与降级占位
+   *    接入边界(如实声明): 本模块是 Round2 公共 API 骨架,
+   *    尚未全量替换旧版 slot() / 现有 74 关图片槽位; 本轮不要求全量改造
+   *    旧图片槽位, 也不处理正式贴图。仅保证「已注册素材」在加载失败时有
+   *    明确 fallback, 不静默破图。
    * ------------------------------------------------------------------ */
   var AssetRegistry = {
     splash: {}, onboard: {}, character: {}, node: {}, done: {}, background: {}, boss: {}, certificate: {}, ui: {}
@@ -168,18 +176,38 @@
     var bucket = this[type];
     return !!(bucket && Object.prototype.hasOwnProperty.call(bucket, id));
   };
+  AssetRegistry.escapeAttr = function (s) {
+    return String(s == null ? '' : s).replace(/[<>&"]/g, function (c) {
+      return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c];
+    });
+  };
   AssetRegistry.fallback = function (type, id) {
-    var label = (this._meta[type] || type) + ' #' + id;
-    return '<div class="asset-fallback" data-type="' + type + '" data-id="' + id +
-      '" role="img" aria-label="占位素材：' + label + '">🖼️ ' + label + '</div>';
+    var meta = this._meta[type] || type;
+    var label = meta + ' #' + id;
+    return '<div class="asset-fallback" data-type="' + this.escapeAttr(type) + '" data-id="' + this.escapeAttr(id) +
+      '" role="img" aria-label="占位素材：' + this.escapeAttr(label) + '">' + this.escapeAttr('🖼️ ' + label) + '</div>';
   };
   AssetRegistry.render = function (type, id) {
-    if (this.exists(type, id)) {
-      var src = this[type][id];
-      var label = (this._meta[type] || type) + ' ' + id;
-      return '<img class="asset-img" alt="' + label + '" src="' + src + '" onerror="this.style.display=\'none\'">';
+    if (!this.exists(type, id)) {
+      return this.fallback(type, id);
     }
-    return this.fallback(type, id);
+    var src = this[type][id];
+    return '<span class="asset-runtime-host"' +
+      ' data-type="' + this.escapeAttr(type) + '"' +
+      ' data-id="' + this.escapeAttr(id) + '">' +
+      '<img class="asset-img"' +
+      ' src="' + this.escapeAttr(src) + '"' +
+      ' alt="' + this.escapeAttr(id) + '"' +
+      ' onerror="window.AssetRegistry.replaceBroken(this)">' +
+      '</span>';
+  };
+  // 已注册素材加载失败时, 把整个 <img> 宿主 span 替换为统一 fallback 占位(而非静默隐藏 <img>)。
+  AssetRegistry.replaceBroken = function (img) {
+    var host = img && img.parentNode;
+    if (!host) return;
+    var type = host.getAttribute('data-type');
+    var id = host.getAttribute('data-id');
+    host.outerHTML = this.fallback(type, id);
   };
 
   /* ------------------------------------------------------------------
@@ -191,7 +219,7 @@
     });
   }
 
-  var Completion = { _modal: null, _submitted: false, _allowClose: false };
+  var Completion = { _modal: null, _submitted: false, _allowClose: false, _lastError: null };
 
   Completion._tiers = {
     normal: { icon: '🎉', title: '这一关完成了', sub: function (o) { return o.levelTitle || '普通关卡'; }, continueText: '继续学习' },
@@ -242,7 +270,7 @@
     }
     if (tier === 'boss') {
       return this._row('本世界综合任务结果', o.worldResult || '') +
-        this._row('已验证的能力', o.verifiedCapabilities || '') +
+        this._row('已验证能力', o.verifiedCapabilities || '') +
         this._row('世界认证', o.worldCert || '') +
         this._row('下一世界预告', o.nextWorldPreview || '');
     }
@@ -268,6 +296,7 @@
     actions.innerHTML = '';
     this._allowClose = !!meta.allowClose;
     this._submitted = false;
+    this._lastError = null;
     var self = this;
     var cont = document.createElement('button');
     cont.className = 'btn btn-gold r2-comp-continue';
@@ -275,7 +304,8 @@
     cont.onclick = function () {
       if (self._submitted) return;            // 防重复提交
       self._submitted = true;
-      try { if (typeof opt.onContinue === 'function') opt.onContinue(); } catch (e) {}
+      try { if (typeof opt.onContinue === 'function') opt.onContinue(); }
+      catch (e) { Completion._lastError = e; console.error('[Completion:onContinue]', e); }
       self.hide();
     };
     actions.appendChild(cont);
@@ -286,7 +316,8 @@
       back.onclick = function () {
         if (self._submitted) return;
         self._submitted = true;
-        try { if (typeof opt.onBack === 'function') opt.onBack(); } catch (e) {}
+        try { if (typeof opt.onBack === 'function') opt.onBack(); }
+        catch (e) { Completion._lastError = e; console.error('[Completion:onBack]', e); }
         self.hide();
       };
       actions.appendChild(back);
@@ -299,7 +330,8 @@
 
   Completion.hide = function () {
     if (this._modal) this._modal.classList.remove('active');
-    this._submitted = false;
+    // 注意: _submitted 不在 hide() 复位, 而在 show() 复位 —— 这样「返回地图 / 继续」按钮
+    // 在弹窗关闭后再次(程序化)点击也不会重复触发 onBack / onContinue, 真正实现单次执行。
   };
 
   /* ------------------------------------------------------------------
@@ -369,19 +401,37 @@
     else box.appendChild(panel);
   };
 
+  Round2Exp.nextWorldFirstLevel = function (id) {
+    try {
+      var wk = LevelData[id] && LevelData[id].world;
+      if (!wk || !WORLDS) return null;
+      var keys = Object.keys(WORLDS);
+      var idx = keys.indexOf(wk);
+      if (idx < 0 || idx + 1 >= keys.length) return null;
+      var nw = WORLDS[keys[idx + 1]];
+      return (nw && nw.levels && nw.levels[0]) || null;
+    } catch (e) { return null; }
+  };
+
   Round2Exp.handleCompletion = function (id, rep) {
-    var _realStart = Game.startLevel, _realBack = Game.backToMap;
+    // 保留引擎原始函数对象(不绑定、不改写身份), 仅临时吞掉自动跳转期间的调度。
+    var _startMethod = Game.startLevel, _backMethod = Game.backToMap;
     // 吞掉原 done() 在 1400ms 调度的自动跳转，改为弹出统一完成反馈
     Game.startLevel = function () {};
     Game.backToMap = function () {};
     var self = Level;
     setTimeout(function () {
-      Game.startLevel = _realStart; Game.backToMap = _realBack;
+      // 恢复原始函数对象(身份不变), 之后统一通过 .call(Game, ...) 调用以保留 Game 上下文
+      Game.startLevel = _startMethod; Game.backToMap = _backMethod;
+      function callRealStart(lvlId) { return _startMethod.call(Game, lvlId); }
+      function callRealBack() { return _backMethod.call(Game); }
       var m = (typeof getLevelMeta === 'function') ? getLevelMeta(id) : null;
       var isCore = !!(m && m.type === 'core');
       var nextCore = isCore && (typeof getNextCoreLevel === 'function') ? getNextCoreLevel(id) : null;
       var canAdvance = !!(nextCore && State.levels[nextCore] &&
         (typeof _realUnlocked === 'function' ? _realUnlocked(nextCore) : true));
+      var nwf = Round2Exp.nextWorldFirstLevel(id);
+      var canEnterWorld = !!(nwf && (typeof _realUnlocked === 'function' ? _realUnlocked(nwf) : true));
       Completion.show({
         tier: rep.completionTier,
         levelId: id,
@@ -395,9 +445,20 @@
         capabilityList: rep.capabilityList,
         realTask: rep.realTask,
         nextPurpose: rep.nextPurpose,
+        // Boss / World 完成反馈所需的专属字段
+        worldResult: rep.worldResult,
+        verifiedCapabilities: rep.verifiedCapabilities,
+        worldCert: rep.worldCert,
+        nextWorldPreview: rep.nextWorldPreview,
         onContinue: function () {
-          if (canAdvance) _realStart(nextCore); else _realBack();
-        }
+          if (rep.completionTier === 'boss') {
+            // Boss 关「进入下一世界」：合法时进入下一世界首关，否则返回地图
+            if (canEnterWorld) { callRealStart(nwf); return; }
+            callRealBack(); return;
+          }
+          if (canAdvance) callRealStart(nextCore); else callRealBack();
+        },
+        onBack: function () { callRealBack(); }   // 真实调用原始 Game.backToMap()（保留 Game 上下文）
       });
     }, 1500);
   };

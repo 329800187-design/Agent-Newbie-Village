@@ -14,19 +14,40 @@ ALPHA2 = os.path.join(BASE, 'release', 'R1.2-alpha2', 'Agent新手村_R1.2-alpha
 FEATURES = os.path.join(BASE, 'round2_features.js')
 OUT = os.path.join(BASE, 'Agent新手村_R1.2-round2-dev.html')
 
-BUCKETS = ['splash', 'onboard', 'character', 'node', 'done', 'background', 'boss', 'certificate', 'ui']
+# 逻辑桶名 -> 物理目录名(一个桶可映射到多个物理目录, 如角色拆 peipei/kuro)。
+# 注册路径一律带 assets/ 前缀, 角色 id 以「子类型:文件名」避免培培/小黑重名覆盖。
+BUCKET_DIRS = {
+    'splash': ['splash'],
+    'onboard': ['onboard'],
+    'character': ['peipei', 'kuro'],
+    'node': ['nodes'],
+    'done': ['done'],
+    'background': ['bg'],
+    'boss': ['boss'],
+    'certificate': ['cert'],
+    'ui': ['ui'],
+}
 
 
 def build_seed():
     seed_lines = []
-    for b in BUCKETS:
-        d = os.path.join(BASE, 'assets', b)
+    for bucket, dirs in BUCKET_DIRS.items():
         m = {}
-        if os.path.isdir(d):
+        for sub in dirs:
+            d = os.path.join(BASE, 'assets', sub)
+            if not os.path.isdir(d):
+                continue
             for f in sorted(os.listdir(d)):
-                if f.endswith('.png'):
-                    m[f[:-4]] = '%s/%s' % (b, f)
-        seed_lines.append('  AssetRegistry.%s = %s;' % (b, json.dumps(m, ensure_ascii=False)))
+                if not f.endswith('.png'):
+                    continue
+                stem = f[:-4]
+                if bucket == 'character':
+                    # 物理子目录(peipei/kuro)作为子类型前缀, 避免重名覆盖
+                    key = '%s:%s' % (sub, stem)
+                else:
+                    key = stem
+                m[key] = 'assets/%s/%s' % (sub, f)
+        seed_lines.append('  AssetRegistry.%s = %s;' % (bucket, json.dumps(m, ensure_ascii=False)))
     return '\n'.join(seed_lines)
 
 

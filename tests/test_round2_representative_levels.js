@@ -115,6 +115,76 @@ const IDS = ['ai_camp_1', 'w1_1', 'w3_13', 'w4_4', 'w4_7', 'w6_9', 'w7_7'];
     rep.assert(gate.hasGate && gate.hasGate7, '原始 w6_9 / w7_7 门禁代码未被 Round2 改动');
     rep.assert(gate.keepGate, 'w6_9 / w7_7 keepGate 标记保留');
 
+    // ═══ 合法通过态: w6_9 触发 boss / w7_7 触发 world(门禁未被绕过) ═══
+    const passed = await page.evaluate(async () => {
+      const w = (ms) => new Promise(r => setTimeout(r, ms));
+      const out = {};
+      // --- w6_9: 合法「已通过同版本验收」状态(引擎认可的数据结构) ---
+      const cfg6 = { goal: ['g'], input: ['i'], tools: ['t'], perm: ['p'], stop: ['s'], fallback: ['f'], accept: ['a'], riskRules: [] };
+      Level.render('w6_9');
+      await w(160);
+      Sim.state = {
+        builderValues: JSON.parse(JSON.stringify(cfg6)),
+        configStatus: 'submitted', configRevision: 1,
+        configSnapshot: JSON.parse(JSON.stringify(cfg6)),
+        passed: { normal: 1, 'missing-info': 1, 'high-risk': 1 },
+        failures: {}, finalPassedAt: Date.now(),
+        totalRuns: { normal: 1, 'missing-info': 1, 'high-risk': 1 }, runs: {}, history: []
+      };
+      Level.builderState = Level.builderState || {};
+      Level.builderState['agent_builder'] = { values: JSON.parse(JSON.stringify(cfg6)), attempt: 0 };
+      window.Completion.hide();
+      Level.done();
+      await w(1700);
+      let m = document.getElementById('r2-comp-modal');
+      out.w6tier = m ? m.getAttribute('data-tier') : null;
+      out.w6active = !!(m && m.classList.contains('active'));
+      const b6 = document.getElementById('r2-comp-body');
+      const t6 = b6 ? b6.textContent : '';
+      out.w6body = ['本世界综合任务结果', '已验证能力', '世界认证', '下一世界预告'].every(k => t6.indexOf(k) >= 0);
+      const btns6 = m ? document.querySelectorAll('#r2-comp-actions button') : [];
+      out.w6back = !![].slice.call(btns6).find(b => b.textContent.indexOf('返回地图') >= 0);
+      window.Completion.hide();
+
+      // --- w7_7: 合法「已通过同版本验收」状态 ---
+      const cfg7 = { io: ['in_data', 'out_advice'], exec: ['e_script'], fail: ['f_retry'], confirm: ['c_500'], accept: ['a_evi'] };
+      Level.render('w7_7');
+      await w(160);
+      WfSim.state = {
+        builderValues: JSON.parse(JSON.stringify(cfg7)),
+        configStatus: 'submitted', configRevision: 1,
+        configSnapshot: JSON.parse(JSON.stringify(cfg7)),
+        passed: { normal: 1, 'high-amount': 1, 'tool-fail': 1 },
+        failures: {}, finalPassedAt: Date.now(),
+        sequencePassed: true, sequenceOrder: [],
+        totalRuns: { normal: 1, 'high-amount': 1, 'tool-fail': 1 }, runs: {}, history: []
+      };
+      Level.builderState = Level.builderState || {};
+      Level.builderState['workflow_builder'] = { values: JSON.parse(JSON.stringify(cfg7)), attempt: 0 };
+      Level.interactionPassed = Level.interactionPassed || {};
+      Level.interactionPassed.workflow_sequence = true;
+      Level.interactionPassed.workflow_builder = true;
+      window.Completion.hide();
+      Level.done();
+      await w(1700);
+      m = document.getElementById('r2-comp-modal');
+      out.w7tier = m ? m.getAttribute('data-tier') : null;
+      out.w7active = !!(m && m.classList.contains('active'));
+      const b7 = document.getElementById('r2-comp-body');
+      const t7 = b7 ? b7.textContent : '';
+      out.w7body = ['世界认证', '本世界能力清单', '可独立完成的真实任务', '下一世界学习目的'].every(k => t7.indexOf(k) >= 0);
+      const btns7 = m ? document.querySelectorAll('#r2-comp-actions button') : [];
+      out.w7back = !![].slice.call(btns7).find(b => b.textContent.indexOf('返回地图') >= 0);
+      window.Completion.hide();
+      return out;
+    });
+    rep.assert(passed.w6active && passed.w6tier === 'boss', `w6_9 合法通过门禁后完成弹窗 tier=boss (${passed.w6tier})`);
+    rep.assert(passed.w6body, 'w6_9 boss 弹窗含 本世界综合任务结果/已验证能力/世界认证/下一世界预告');
+    rep.assert(passed.w6back, 'w6_9 boss 弹窗含「返回地图」按钮');
+    rep.assert(passed.w7active && passed.w7tier === 'world', `w7_7 合法通过门禁后完成弹窗 tier=world (${passed.w7tier})`);
+    rep.assert(passed.w7body, 'w7_7 world 弹窗含 世界认证/本世界能力清单/可独立完成的真实任务/下一世界学习目的');
+    rep.assert(passed.w7back, 'w7_7 world 弹窗含「返回地图」按钮');
+
     // ═══ 不变性: 渲染代表关全程 0 错误 ═══
     rep.assert(st.pageErrors.length === 0, `渲染 7 代表关 pageerror = 0 (${st.pageErrors.slice(0, 3).join(' | ') || '0'})`);
     rep.assert(st.failedRequests.length === 0, `渲染 7 代表关 requestfailed = 0 (${st.failedRequests.slice(0, 3).join(' | ') || '0'})`);

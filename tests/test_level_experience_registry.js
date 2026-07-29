@@ -92,12 +92,14 @@ const EXPECTED_IDS = ['ai_camp_1', 'w1_1', 'w3_13', 'w4_4', 'w4_7', 'w6_9', 'w7_
       const R = window.LevelExperienceRegistry;
       return {
         n: [R.ai_camp_1.completionTier, R.w1_1.completionTier],
-        cap: [R.w3_13.completionTier, R.w4_4.completionTier, R.w4_7.completionTier, R.w6_9.completionTier],
+        cap: [R.w3_13.completionTier, R.w4_4.completionTier, R.w4_7.completionTier],
+        boss: R.w6_9.completionTier,
         world: R.w7_7.completionTier
       };
     });
     rep.assert(tiers.n.every(t => t === 'normal'), 'ai_camp_1 / w1_1 → normal 层');
-    rep.assert(tiers.cap.every(t => t === 'capability'), 'w3_13 / w4_4 / w4_7 / w6_9 → capability 层');
+    rep.assert(tiers.cap.every(t => t === 'capability'), 'w3_13 / w4_4 / w4_7 → capability 层');
+    rep.assert(tiers.boss === 'boss', 'w6_9 → boss 层（综合任务 Boss 验收）');
     rep.assert(tiers.world === 'world', 'w7_7 → world 层');
 
     // 专属高亮字段
