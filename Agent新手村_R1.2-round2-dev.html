@@ -3448,6 +3448,10 @@ Game.init();window.Game=Game;
 
   /* ------------------------------------------------------------------
    * 2) AssetRegistry —— 素材注册与降级占位
+   *    接入边界(如实声明): 本模块是 Round2 公共 API 骨架,
+   *    尚未全量替换旧版 slot() / 现有 74 关图片槽位; 本轮不要求全量改造
+   *    旧图片槽位, 也不处理正式贴图。仅保证「已注册素材」在加载失败时有
+   *    明确 fallback, 不静默破图。
    * ------------------------------------------------------------------ */
   var AssetRegistry = {
     splash: {}, onboard: {}, character: {}, node: {}, done: {}, background: {}, boss: {}, certificate: {}, ui: {}
@@ -3478,18 +3482,38 @@ Game.init();window.Game=Game;
     var bucket = this[type];
     return !!(bucket && Object.prototype.hasOwnProperty.call(bucket, id));
   };
+  AssetRegistry.escapeAttr = function (s) {
+    return String(s == null ? '' : s).replace(/[<>&"]/g, function (c) {
+      return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c];
+    });
+  };
   AssetRegistry.fallback = function (type, id) {
-    var label = (this._meta[type] || type) + ' #' + id;
-    return '<div class="asset-fallback" data-type="' + type + '" data-id="' + id +
-      '" role="img" aria-label="占位素材：' + label + '">🖼️ ' + label + '</div>';
+    var meta = this._meta[type] || type;
+    var label = meta + ' #' + id;
+    return '<div class="asset-fallback" data-type="' + this.escapeAttr(type) + '" data-id="' + this.escapeAttr(id) +
+      '" role="img" aria-label="占位素材：' + this.escapeAttr(label) + '">' + this.escapeAttr('🖼️ ' + label) + '</div>';
   };
   AssetRegistry.render = function (type, id) {
-    if (this.exists(type, id)) {
-      var src = this[type][id];
-      var label = (this._meta[type] || type) + ' ' + id;
-      return '<img class="asset-img" alt="' + label + '" src="' + src + '" onerror="this.style.display=\'none\'">';
+    if (!this.exists(type, id)) {
+      return this.fallback(type, id);
     }
-    return this.fallback(type, id);
+    var src = this[type][id];
+    return '<span class="asset-runtime-host"' +
+      ' data-type="' + this.escapeAttr(type) + '"' +
+      ' data-id="' + this.escapeAttr(id) + '">' +
+      '<img class="asset-img"' +
+      ' src="' + this.escapeAttr(src) + '"' +
+      ' alt="' + this.escapeAttr(id) + '"' +
+      ' onerror="window.AssetRegistry.replaceBroken(this)">' +
+      '</span>';
+  };
+  // 已注册素材加载失败时, 把整个 <img> 宿主 span 替换为统一 fallback 占位(而非静默隐藏 <img>)。
+  AssetRegistry.replaceBroken = function (img) {
+    var host = img && img.parentNode;
+    if (!host) return;
+    var type = host.getAttribute('data-type');
+    var id = host.getAttribute('data-id');
+    host.outerHTML = this.fallback(type, id);
   };
 
   /* ------------------------------------------------------------------
@@ -3501,7 +3525,7 @@ Game.init();window.Game=Game;
     });
   }
 
-  var Completion = { _modal: null, _submitted: false, _allowClose: false };
+  var Completion = { _modal: null, _submitted: false, _allowClose: false, _lastError: null };
 
   Completion._tiers = {
     normal: { icon: '🎉', title: '这一关完成了', sub: function (o) { return o.levelTitle || '普通关卡'; }, continueText: '继续学习' },
@@ -3578,6 +3602,7 @@ Game.init();window.Game=Game;
     actions.innerHTML = '';
     this._allowClose = !!meta.allowClose;
     this._submitted = false;
+    this._lastError = null;
     var self = this;
     var cont = document.createElement('button');
     cont.className = 'btn btn-gold r2-comp-continue';
@@ -3585,7 +3610,8 @@ Game.init();window.Game=Game;
     cont.onclick = function () {
       if (self._submitted) return;            // 防重复提交
       self._submitted = true;
-      try { if (typeof opt.onContinue === 'function') opt.onContinue(); } catch (e) {}
+      try { if (typeof opt.onContinue === 'function') opt.onContinue(); }
+      catch (e) { Completion._lastError = e; console.error('[Completion:onContinue]', e); }
       self.hide();
     };
     actions.appendChild(cont);
@@ -3596,7 +3622,8 @@ Game.init();window.Game=Game;
       back.onclick = function () {
         if (self._submitted) return;
         self._submitted = true;
-        try { if (typeof opt.onBack === 'function') opt.onBack(); } catch (e) {}
+        try { if (typeof opt.onBack === 'function') opt.onBack(); }
+        catch (e) { Completion._lastError = e; console.error('[Completion:onBack]', e); }
         self.hide();
       };
       actions.appendChild(back);
@@ -3693,13 +3720,17 @@ Game.init();window.Game=Game;
   };
 
   Round2Exp.handleCompletion = function (id, rep) {
-    var _realStart = Game.startLevel, _realBack = Game.backToMap;
+    // 保留引擎原始函数对象(不绑定、不改写身份), 仅临时吞掉自动跳转期间的调度。
+    var _startMethod = Game.startLevel, _backMethod = Game.backToMap;
     // 吞掉原 done() 在 1400ms 调度的自动跳转，改为弹出统一完成反馈
     Game.startLevel = function () {};
     Game.backToMap = function () {};
     var self = Level;
     setTimeout(function () {
-      Game.startLevel = _realStart; Game.backToMap = _realBack;
+      // 恢复原始函数对象(身份不变), 之后统一通过 .call(Game, ...) 调用以保留 Game 上下文
+      Game.startLevel = _startMethod; Game.backToMap = _backMethod;
+      function callRealStart(lvlId) { return _startMethod.call(Game, lvlId); }
+      function callRealBack() { return _backMethod.call(Game); }
       var m = (typeof getLevelMeta === 'function') ? getLevelMeta(id) : null;
       var isCore = !!(m && m.type === 'core');
       var nextCore = isCore && (typeof getNextCoreLevel === 'function') ? getNextCoreLevel(id) : null;
@@ -3728,12 +3759,12 @@ Game.init();window.Game=Game;
         onContinue: function () {
           if (rep.completionTier === 'boss') {
             // Boss 关「进入下一世界」：合法时进入下一世界首关，否则返回地图
-            if (canEnterWorld) { _realStart(nwf); return; }
-            _realBack(); return;
+            if (canEnterWorld) { callRealStart(nwf); return; }
+            callRealBack(); return;
           }
-          if (canAdvance) _realStart(nextCore); else _realBack();
+          if (canAdvance) callRealStart(nextCore); else callRealBack();
         },
-        onBack: function () { _realBack(); }   // 真实调用原始 Game.backToMap()
+        onBack: function () { callRealBack(); }   // 真实调用原始 Game.backToMap()（保留 Game 上下文）
       });
     }, 1500);
   };
