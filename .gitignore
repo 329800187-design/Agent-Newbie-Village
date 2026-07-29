@@ -27,3 +27,7 @@ local_alpha2_test.log
 local_file_inventory.txt
 local_git_status.txt
 current_commit.txt
+
+# Round3 自动生成的测试夹具与构建清单 (确定性, 可清理, 不入库)
+tests/fixtures/assets/
+R1.2_Round3_build_manifest.txt

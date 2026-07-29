@@ -1,0 +1,522 @@
+/* =====================================================================
+ * R1.2 Round3 骨架扩展（独立 <script>，链在 Round2-R2 之上，不修改
+ * LevelData / 课程哈希 / Alpha2 / Round2-R2 交付件）
+ *
+ * 提供：
+ *   1) InteractionProgress  —— 公共交互进度对象（步骤 / 门禁 / 失败原因 / 可提交）
+ *   2) ErrorFeedback        —— 公共错误反馈对象（渐进式提示，绝不泄露正确答案）
+ *   3) Round3 第二批关键关卡接入 —— 9 关（含 w5_8 替代不存在的 w5_9）接入
+ *      LevelExperienceRegistry + InteractionProgress + ErrorFeedback + 对应 completion tier
+ *
+ * 关键边界（如实声明）：
+ *   * InteractionProgress / ErrorFeedback 的状态只存于自身 _state，绝不写入 LevelData。
+ *   * W6/W7 门禁只读取 Sim / WfSim 的真实状态（readGate），不自行伪造通过。
+ *   * ErrorFeedback 不展示正确答案、不绕过 completion gate。
+ * ===================================================================== */
+(function () {
+  'use strict';
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[<>&"]/g, function (c) {
+      return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c];
+    });
+  }
+
+  // 9 关（w5_9 在 LevelData 中不存在，W5 真正 boss 为 w5_8，故以 w5_8 替代）
+  var R3_LEVELS = ['ai_camp_11', 'w1_8', 'w2_6', 'w3_6', 'w3_13', 'w4_7', 'w5_8', 'w6_9', 'w7_7'];
+
+  /* ------------------------------------------------------------------
+   * 1) InteractionProgress —— 公共交互进度对象
+   * ------------------------------------------------------------------ */
+  var InteractionProgress = { _state: {} };
+
+  InteractionProgress.init = function (levelId, steps) {
+    steps = steps || [];
+    var st = {
+      levelId: levelId,
+      steps: steps.map(function (s, i) {
+        return { id: s.id || ('step' + i), label: s.label || ('步骤' + (i + 1)), done: false };
+      }),
+      current: steps.length ? 0 : 0,
+      failReason: null,
+      submitAllowed: false,
+      gate: null
+    };
+    this._state[levelId] = st;
+    this._refreshGate(levelId);
+    this._recalc(levelId);
+    return st;
+  };
+
+  InteractionProgress._recalc = function (levelId) {
+    var st = this._state[levelId];
+    if (!st) return;
+    var done = 0;
+    st.steps.forEach(function (s) { if (s.done) done++; });
+    st.completedCount = done;
+    st.total = st.steps.length;
+    st.submitAllowed = (st.total > 0 && done === st.total);
+    // 推进 current 到下一个未完成步骤
+    var next = st.total;
+    for (var i = 0; i < st.steps.length; i++) {
+      if (!st.steps[i].done) { next = i; break; }
+    }
+    st.current = next;
+  };
+
+  InteractionProgress.complete = function (levelId, stepId) {
+    var st = this._state[levelId];
+    if (!st) return false;
+    var s = null;
+    for (var i = 0; i < st.steps.length; i++) { if (st.steps[i].id === stepId) { s = st.steps[i]; break; } }
+    if (s) s.done = true;
+    this._recalc(levelId);
+    return true;
+  };
+
+  InteractionProgress.fail = function (levelId, stepId, reason) {
+    var st = this._state[levelId];
+    if (!st) return false;
+    st.failReason = reason || '未完成';
+    this._recalc(levelId);
+    return true;
+  };
+
+  InteractionProgress.reset = function (levelId) {
+    if (this._state[levelId]) delete this._state[levelId];
+    return true;
+  };
+
+  // 只读读取门禁状态（W6/W7 读取 Sim/WfSim 真实状态；绝不伪造）
+  function readGate(levelId) {
+    try {
+      if (levelId === 'w6_9' && typeof Sim !== 'undefined' && Sim && Sim.state) {
+        return {
+          label: 'W6 · Agent 配置门禁',
+          passed: !!(Sim.isCurrentRevisionPassed && Sim.isCurrentRevisionPassed()),
+          status: Sim.state.configStatus || 'n/a'
+        };
+      }
+      if (levelId === 'w7_7' && typeof WfSim !== 'undefined' && WfSim && WfSim.state) {
+        return {
+          label: 'W7 · 工作流门禁',
+          passed: !!(WfSim.isCurrentRevisionPassed && WfSim.isCurrentRevisionPassed()),
+          status: WfSim.state.configStatus || 'n/a'
+        };
+      }
+    } catch (e) { /* 读取失败按无门禁处理 */ }
+    return { label: '无门禁（普通关卡）', passed: null, status: 'n/a' };
+  }
+  InteractionProgress._refreshGate = function (levelId) {
+    var st = this._state[levelId];
+    if (st) st.gate = readGate(levelId);
+  };
+
+  InteractionProgress.render = function (levelId) {
+    var st = this._state[levelId];
+    if (!st) return '';
+    var g = st.gate || { label: '无门禁', passed: null, status: 'n/a' };
+    var gateTxt = g.label + '：' + (g.passed === true ? '已通过' : (g.passed === false ? '未通过' : '不适用'));
+    var lis = st.steps.map(function (s, i) {
+      var cls = s.done ? 'done' : (i === st.current ? 'current' : '');
+      var mark = s.done ? '✅' : (i === st.current ? '▶' : '○');
+      return '<li class="r3-ip-step ' + cls + '">' + mark + ' ' + esc(s.label) + '</li>';
+    }).join('');
+    return '<div class="r3-iprog" data-level="' + esc(levelId) + '">' +
+      '<div class="r3-ip-head">📊 交互进度</div>' +
+      '<div class="r3-ip-row">当前步骤：' + (st.total ? (st.current + 1) + ' / ' + st.total : '—') + '</div>' +
+      '<div class="r3-ip-row">已完成 / 总步骤：' + st.completedCount + ' / ' + st.total + '</div>' +
+      '<ul class="r3-ip-steps">' + lis + '</ul>' +
+      '<div class="r3-ip-row">当前门禁：' + esc(gateTxt) + '</div>' +
+      '<div class="r3-ip-row">未完成原因：' + esc(st.failReason || '无') + '</div>' +
+      '<div class="r3-ip-row">是否允许提交：' + (st.submitAllowed ? '是' : '否') + '</div>' +
+      '</div>';
+  };
+
+  InteractionProgress.getState = function (levelId) {
+    var st = this._state[levelId];
+    if (!st) return null;
+    return {
+      levelId: st.levelId,
+      current: st.current,
+      completedCount: st.completedCount,
+      total: st.total,
+      failReason: st.failReason,
+      submitAllowed: st.submitAllowed,
+      gate: st.gate,
+      steps: st.steps.map(function (s) { return { id: s.id, label: s.label, done: s.done }; })
+    };
+  };
+
+  /* ------------------------------------------------------------------
+   * 2) ErrorFeedback —— 公共错误反馈对象（渐进式提示，不泄露答案）
+   * ------------------------------------------------------------------ */
+  var ErrorFeedback = { _state: {} };
+
+  function _efBlank() {
+    return {
+      errorType: '', whatWentWrong: '', whyItHappened: '', repairAction: '',
+      verificationMethod: '', attemptCount: 0, canRetry: true, _shownFullSteps: false
+    };
+  }
+
+  ErrorFeedback.clear = function (levelId) {
+    if (this._state[levelId]) delete this._state[levelId];
+    return true;
+  };
+
+  ErrorFeedback.recordAttempt = function (levelId) {
+    var st = this._state[levelId] || (this._state[levelId] = _efBlank());
+    st.attemptCount = (st.attemptCount || 0) + 1;
+    st.canRetry = st.attemptCount < 3; // 第三次起展示完整步骤, 不再有更高层级提示
+    return st;
+  };
+
+  ErrorFeedback.getState = function (levelId) {
+    var st = this._state[levelId];
+    if (!st) return null;
+    return {
+      errorType: st.errorType, whatWentWrong: st.whatWentWrong, whyItHappened: st.whyItHappened,
+      repairAction: st.repairAction, verificationMethod: st.verificationMethod,
+      attemptCount: st.attemptCount, canRetry: st.canRetry, _shownFullSteps: !!st._shownFullSteps
+    };
+  };
+
+  // hints: 长度 >=3 的渐进式提示数组（方向 / 更具体 / 完整步骤）；绝不写正确答案
+  ErrorFeedback.show = function (levelId, hints) {
+    hints = hints || [];
+    var st = this._state[levelId] || (this._state[levelId] = _efBlank());
+    var idx = Math.min((st.attemptCount || 1) - 1, Math.max(0, hints.length - 1));
+    var h = hints[idx] || hints[hints.length - 1] || {};
+    st.errorType = h.errorType || st.errorType || '通用错误';
+    st.whatWentWrong = h.whatWentWrong || st.whatWentWrong || '';
+    st.whyItHappened = h.whyItHappened || st.whyItHappened || '';
+    st.repairAction = h.repairAction || st.repairAction || '';
+    st.verificationMethod = h.verificationMethod || st.verificationMethod || '';
+    st._shownFullSteps = (st.attemptCount >= 3); // 第三次才允许展示完整步骤
+    this._renderPanel(levelId);
+    return st;
+  };
+
+  ErrorFeedback._renderPanel = function (levelId) {
+    var st = this._state[levelId];
+    if (!st) return;
+    var box = document.getElementById('level-content');
+    if (!box) return;
+    var old = document.getElementById('r3-err-feedback');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    var panel = document.createElement('div');
+    panel.id = 'r3-err-feedback';
+    panel.className = 'r3-err';
+    panel.setAttribute('data-level', levelId);
+    panel.innerHTML =
+      '<div class="r3-err-head">⚠️ 错误反馈（第 ' + st.attemptCount + ' 次尝试）</div>' +
+      '<div class="r3-err-row"><b>错误类型：</b>' + esc(st.errorType) + '</div>' +
+      '<div class="r3-err-row"><b>哪里不对：</b>' + esc(st.whatWentWrong) + '</div>' +
+      '<div class="r3-err-row"><b>为什么会这样：</b>' + esc(st.whyItHappened) + '</div>' +
+      '<div class="r3-err-row"><b>修复动作：</b>' + esc(st.repairAction) + '</div>' +
+      '<div class="r3-err-row"><b>验证方法：</b>' + esc(st.verificationMethod) + '</div>' +
+      '<div class="r3-err-row"><b>可否重试：</b>' + (st.canRetry ? '可以' : '已给出完整步骤，请按步骤检查') + '</div>';
+    box.appendChild(panel);
+  };
+
+  /* ------------------------------------------------------------------
+   * 3) Round3 第二批关键关卡接入
+   *    - 5 个新关：写入 LevelExperienceRegistry 完整元数据
+   *    - 4 个已在 Round2 registry 的关：仅增强 interactionSteps / errorHints
+   * ------------------------------------------------------------------ */
+  var R3_NEW = {
+    'ai_camp_11': {
+      templateType: '启蒙营结业模板',
+      taskBrief: '把启蒙营里反复练习的四件事串成一张「我学会了什么」清单，作为结业证明',
+      why: '启蒙营结束不是终点；把零散认知收拢成清单，之后遇到 AI 才知道该用哪条',
+      completionCriteria: [
+        '能说清 AI 的回答是「预测下一个词」而不是「理解」',
+        '能举出至少一个 AI 会一本正经胡说八道的场景',
+        '能说清什么时候必须自己核实、不能盲信',
+        '能复述启蒙营教给你的核心自我保护原则'
+      ],
+      capabilitySummary: '你已完成 AI 启蒙，建立了基础且正确的 AI 认知框架',
+      nextReason: '下一站进入终端世界，开始真正动手指挥电脑。',
+      splashId: 'J01',
+      completionTier: 'normal',
+      interactionSteps: [
+        { id: 'recall', label: '复述 AI 的本质（预测下一个词）' },
+        { id: 'example', label: '举一个 AI 会胡说八道的例子' },
+        { id: 'verify', label: '说明何时必须自己核实' },
+        { id: 'principle', label: '复述核心自我保护原则' }
+      ],
+      errorHints: [
+        { errorType: '认知复述不完整', whatWentWrong: '结业清单里少了关键点', whyItHappened: '可能只记住了例子，没记住底层原理', repairAction: '回到启蒙营前三关，把「预测 vs 理解」「何时核实」两条主线补全', verificationMethod: '对照 checklist 逐条打勾' },
+        { errorType: '认知复述不完整', whatWentWrong: '结业清单里少了关键点', whyItHappened: '容易把「例子」误当成「原理」', repairAction: '区分「记住一个例子」和「记住原理」：原理是「AI 不真懂，只是预测」', verificationMethod: '用一句话说明 AI 为什么不是真懂' },
+        { errorType: '认知复述不完整', whatWentWrong: '结业清单仍未覆盖全部要点', whyItHappened: '清单维度缺失', repairAction: '完整步骤：① AI 本质 ② 胡说例子 ③ 核实时机 ④ 自我保护原则，四者缺一不可', verificationMethod: '按四步逐项确认是否都能说清' }
+      ]
+    },
+    'w1_8': {
+      templateType: '终端世界 Boss 模板',
+      taskBrief: '在终端里完成一个跨目录的小任务，作为终端世界的毕业 Boss',
+      why: '终端是你直接指挥电脑的入口；能独立跑通多步命令，才算真正入门',
+      completionCriteria: [
+        '能说清每一步命令在做什么',
+        '能解释输出为什么符合预期',
+        '能把零散命令串成一条可复现的操作链路'
+      ],
+      capabilitySummary: '你已能用终端完成跨目录的小任务',
+      nextReason: '下一站进入「文件与路径」世界，把目录操作练成肌肉记忆。',
+      splashId: 'J01',
+      completionTier: 'boss',
+      interactionSteps: [
+        { id: 'step1', label: '执行第 1 步命令并观察输出' },
+        { id: 'step2', label: '在正确目录执行第 2 步' },
+        { id: 'step3', label: '串联并验证最终结果' }
+      ],
+      errorHints: [
+        { errorType: '终端链路中断', whatWentWrong: '命令没在预期目录执行', whyItHappened: '可能漏了切换目录或路径拼错', repairAction: '先用 pwd 确认当前目录，再决定用相对还是绝对路径', verificationMethod: '执行 pwd 看是否在对的位置' },
+        { errorType: '终端链路中断', whatWentWrong: '中间某步输出不对', whyItHappened: '命令顺序或参数错了', repairAction: '逐步回放：每执行一条就对照预期输出，错的那条单独重跑', verificationMethod: '逐步核对每条命令的输出' },
+        { errorType: '终端链路中断', whatWentWrong: '整条链路仍不通', whyItHappened: '缺了前置步骤', repairAction: '完整步骤：① pwd 确认位置 ② 切到目标目录 ③ 执行核心命令 ④ 用 ls/输出验证，四步顺序不可乱', verificationMethod: '按四步重跑并对照预期' }
+      ]
+    },
+    'w2_6': {
+      templateType: '文件与路径世界 Boss 模板',
+      taskBrief: '用相对/绝对路径在多个文件夹间搬运与重命名文件，作为文件世界的毕业 Boss',
+      why: '路径是程序的「地址系统」；搞错路径，代码就找不到文件',
+      completionCriteria: [
+        '能区分相对路径与绝对路径',
+        '能说清目标文件最终被放到了哪里',
+        '能在路径写错时定位并修正'
+      ],
+      capabilitySummary: '你已掌握文件与路径的核心操作',
+      nextReason: '下一站进入「代码执行」世界，开始读懂并运行脚本。',
+      splashId: 'J01',
+      completionTier: 'boss',
+      interactionSteps: [
+        { id: 'locate', label: '确认源文件与目标目录' },
+        { id: 'move', label: '用正确路径搬运/重命名' },
+        { id: 'verify', label: '验证文件落点正确' }
+      ],
+      errorHints: [
+        { errorType: '路径错误', whatWentWrong: '文件没出现在预期位置', whyItHappened: '相对路径的「起点」理解错了', repairAction: '先想清楚「相对谁」：终端的当前目录是相对路径的起点', verificationMethod: '用 pwd + ls 对照路径起点' },
+        { errorType: '路径错误', whatWentWrong: '目标目录不对', whyItHappened: '把相对路径当成了绝对路径', repairAction: '绝对路径以 / 开头（或盘符），相对路径不带；分不清时用绝对路径最稳', verificationMethod: '检查路径是否以 / 开头' },
+        { errorType: '路径错误', whatWentWrong: '仍落点错误', whyItHappened: '缺少逐步验证', repairAction: '完整步骤：① 用 pwd 看起点 ② 拼出目标绝对路径 ③ 执行移动 ④ ls 验证落点', verificationMethod: '按四步重做并确认落点' }
+      ]
+    },
+    'w3_6': {
+      templateType: '代码执行过程判断模板',
+      taskBrief: '给定一段会循环/分支的小脚本，判断「每一轮循环后变量怎么变、最终输出什么」',
+      why: '读不懂执行过程，就只能盲信 AI 给的代码；过程判断是验收能力的根基',
+      completionCriteria: [
+        '能按执行顺序解释变量变化',
+        '能判断循环执行了几轮',
+        '能说出最终输出为什么成立'
+      ],
+      capabilitySummary: '你已经能独立判断一段小脚本的执行过程',
+      nextReason: '下一关进一步练习「逐行读懂真实代码」（代码阅读能力）。',
+      splashId: 'J01',
+      completionTier: 'capability',
+      interactionSteps: [
+        { id: 'trace', label: '逐轮追踪变量变化' },
+        { id: 'loop', label: '判断循环轮数' },
+        { id: 'output', label: '推导最终输出' }
+      ],
+      errorHints: [
+        { errorType: '执行过程判断偏差', whatWentWrong: '变量变化推错了', whyItHappened: '可能跳过了某一轮循环', repairAction: '拿一张纸，把每一轮循环后每个变量的值都写下来', verificationMethod: '对照「每轮一行」的变量表' },
+        { errorType: '执行过程判断偏差', whatWentWrong: '循环轮数数错了', whyItHappened: '边界条件看错（< 还是 <=）', repairAction: '重点看循环条件：是「小于」还是「小于等于」，差一轮', verificationMethod: '代入起止值手工数轮数' },
+        { errorType: '执行过程判断偏差', whatWentWrong: '最终输出仍不对', whyItHappened: '缺了分支判断', repairAction: '完整步骤：① 列出每轮变量 ② 确认循环轮数 ③ 看 if/分支走哪边 ④ 串出最终 print', verificationMethod: '按四步重推并对照' }
+      ]
+    },
+    'w5_8': {
+      templateType: '程序运行链路 Boss 模板',
+      taskBrief: '把「写代码 → 运行 → 看报错 → 修 → 再运行」串成一条稳定链路，作为程序运行世界的毕业 Boss',
+      why: '程序不是写完就完事；能在运行链路里稳定定位问题，才是真会写',
+      completionCriteria: [
+        '能说清代码从哪运行、依赖什么',
+        '能在报错时定位是代码还是环境',
+        '能修复并验证程序跑通'
+      ],
+      capabilitySummary: '你已能独立跑通一条「写-运行-修-验证」链路',
+      nextReason: '下一站进入「Agent 工坊」，学习给智能体定边界与权限。',
+      splashId: 'J01',
+      completionTier: 'boss',
+      interactionSteps: [
+        { id: 'run', label: '运行程序并观察' },
+        { id: 'locate', label: '在链路中定位问题（代码/环境）' },
+        { id: 'fix', label: '修复并重新验证' }
+      ],
+      errorHints: [
+        { errorType: '运行链路卡住', whatWentWrong: '程序跑不起来', whyItHappened: '可能是依赖没装或路径不对', repairAction: '先确认「程序在哪运行、依赖了什么」，再决定补依赖还是改路径', verificationMethod: '列出运行环境与依赖清单' },
+        { errorType: '运行链路卡住', whatWentWrong: '报错定位不到', whyItHappened: '把代码错和环境错混为一谈', repairAction: '看报错类型：语法/逻辑错在代码，库缺失/版本错在环境', verificationMethod: '按报错类型归类' },
+        { errorType: '运行链路卡住', whatWentWrong: '仍未跑通', whyItHappened: '缺系统化复跑', repairAction: '完整步骤：① 跑一次看报错 ② 判断代码错还是环境错 ③ 修复 ④ 再跑验证，循环直到通过', verificationMethod: '按四步复跑并记录每次变化' }
+      ]
+    }
+  };
+
+  var R3_AUG = {
+    'w3_13': {
+      interactionSteps: [
+        { id: 'order', label: '按从上到下顺序读' },
+        { id: 'var', label: '追踪每个变量变化' },
+        { id: 'branch', label: '判断 if/for 走向' },
+        { id: 'final', label: '推导最终输出' }
+      ],
+      errorHints: [
+        { errorType: '读码偏差', whatWentWrong: '执行顺序理解错', whyItHappened: '可能跳读了某行', repairAction: '强制从上到下、一行一行读，不跳行', verificationMethod: '用指读方式复述每一行' },
+        { errorType: '读码偏差', whatWentWrong: '变量最终值错', whyItHappened: '漏看某次赋值', repairAction: '盯住每个变量「在哪被赋值、每次循环后变成多少」', verificationMethod: '列变量变化表' },
+        { errorType: '读码偏差', whatWentWrong: '仍推不出输出', whyItHappened: '缺分支/循环判断', repairAction: '完整步骤：① 顺序读 ② 追变量 ③ 判分支/循环 ④ 串最终输出', verificationMethod: '按四步重推' }
+      ]
+    },
+    'w4_7': {
+      interactionSteps: [
+        { id: 'read', label: '完整看清报错' },
+        { id: 'guess', label: '猜可能原因' },
+        { id: 'check', label: '按顺序排查环境差异' },
+        { id: 'fix', label: '修复并复跑验证' }
+      ],
+      errorHints: [
+        { errorType: '排查无头绪', whatWentWrong: '不知道从哪查', whyItHappened: '没先看清报错', repairAction: '第一步永远是先完整复制/看清报错信息，再动手', verificationMethod: '把报错原文贴出来' },
+        { errorType: '排查无头绪', whatWentWrong: '猜错方向', whyItHappened: '忽略了环境差异', repairAction: '最常见是库版本/Python 版本/缺密钥/路径不对，逐一对比两边环境', verificationMethod: '列两边环境差异清单' },
+        { errorType: '排查无头绪', whatWentWrong: '仍报错', whyItHappened: '缺固定顺序', repairAction: '完整步骤：① 读报错 ② 列可能原因 ③ 对比环境缩小差异 ④ 对齐环境后复跑', verificationMethod: '按四步复跑' }
+      ]
+    },
+    'w6_9': {
+      interactionSteps: [
+        { id: 'config', label: '配置 Agent 目标/工具/权限' },
+        { id: 'normal', label: '跑通 normal 场景' },
+        { id: 'missing', label: '跑通 missing-info 场景' },
+        { id: 'risk', label: '跑通 high-risk 场景' }
+      ],
+      errorHints: [
+        { errorType: '门禁未通过', whatWentWrong: '三个场景未同版本全过', whyItHappened: '可能只过了部分场景', repairAction: '三个场景必须用同一版本配置全部通过，finalPassedAt 才会写入', verificationMethod: '逐一确认三个场景的 passed 版本号' },
+        { errorType: '门禁未通过', whatWentWrong: '场景间配置不一致', whyItHappened: '改了配置没重跑', repairAction: '锁定一份配置快照，三个场景都用它跑', verificationMethod: '对比 configSnapshot 与当前配置' },
+        { errorType: '门禁未通过', whatWentWrong: '仍卡门禁', whyItHappened: '门禁只读，无法绕过', repairAction: '门禁由 Sim 真实状态决定，请按 normal/missing-info/high-risk 同版本全过；本反馈不泄露答案也不绕过 gate', verificationMethod: '看 Sim.state 的 passed 与 configStatus' }
+      ],
+      note: '门禁只读：readGate 仅读取 Sim 真实状态，绝不伪造通过。'
+    },
+    'w7_7': {
+      interactionSteps: [
+        { id: 'seq', label: '配置 workflow_sequence' },
+        { id: 'builder', label: '配置 workflow_builder' },
+        { id: 'normal', label: '跑通 normal 场景' },
+        { id: 'amount', label: '跑通 high-amount 场景' },
+        { id: 'toolfail', label: '跑通 tool-fail 场景' }
+      ],
+      errorHints: [
+        { errorType: '门禁未通过', whatWentWrong: '工作流三场景未全过', whyItHappened: '可能漏了某个分支', repairAction: 'workflow_sequence / workflow_builder 通过 + 三场景同版本验收，finalPassedAt 才写入', verificationMethod: '确认 interactionPassed 与三场景 passed' },
+        { errorType: '门禁未通过', whatWentWrong: '场景间状态不一致', whyItHappened: '人工改了中间态', repairAction: '用同一份工作流配置跑全部场景，别手动改中间状态', verificationMethod: '对比配置与 WfSim.state' },
+        { errorType: '门禁未通过', whatWentWrong: '仍卡门禁', whyItHappened: '门禁只读，无法绕过', repairAction: '门禁由 WfSim 真实状态决定；本反馈不泄露答案也不绕过 gate', verificationMethod: '看 WfSim.state 的 passed 与 configStatus' }
+      ],
+      note: '门禁只读：readGate 仅读取 WfSim 真实状态，绝不伪造通过。'
+    }
+  };
+
+  // 应用：写入新增关 / 增强已有关
+  if (typeof LevelExperienceRegistry !== 'undefined') {
+    R3_LEVELS.forEach(function (id) {
+      if (R3_NEW[id]) {
+        LevelExperienceRegistry[id] = R3_NEW[id];
+      } else if (R3_AUG[id]) {
+        var rep = LevelExperienceRegistry[id];
+        if (rep) {
+          rep.interactionSteps = R3_AUG[id].interactionSteps;
+          rep.errorHints = R3_AUG[id].errorHints;
+          if (R3_AUG[id].note) rep.round3Note = R3_AUG[id].note;
+        }
+      }
+    });
+  }
+
+  /* ------------------------------------------------------------------
+   * 4) Round3Exp —— 把交互进度面板接入关卡内容
+   * ------------------------------------------------------------------ */
+  var Round3Exp = {};
+  Round3Exp.injectProgress = function (id) {
+    if (typeof InteractionProgress === 'undefined') return;
+    var box = document.getElementById('level-content');
+    if (!box) return;
+    var old = document.getElementById('r3-iprog');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    var panel = document.createElement('div');
+    panel.id = 'r3-iprog';
+    panel.className = 'r3-iprog-panel';
+    panel.setAttribute('data-level-ip', id);
+    panel.innerHTML = InteractionProgress.render(id) || '';
+    box.appendChild(panel);
+  };
+
+  // 包裹 Level.render：仅对 R3 关初始化交互进度并注入面板
+  if (typeof Level !== 'undefined' && Level && typeof Level.render === 'function') {
+    var _origRenderR2 = Level.render.bind(Level);
+    Level.render = function (id) {
+      var r = _origRenderR2(id);
+      try {
+        if (R3_LEVELS.indexOf(id) >= 0) {
+          var rep = (typeof LevelExperienceRegistry !== 'undefined') ? LevelExperienceRegistry[id] : null;
+          if (rep) {
+            var steps = rep.interactionSteps || (rep.completionCriteria || []).map(function (c, i) { return { id: 'step' + i, label: c }; });
+            InteractionProgress.init(id, steps);
+            InteractionProgress._refreshGate(id);
+            Round3Exp.injectProgress(id);
+          }
+        }
+      } catch (e) {}
+      return r;
+    };
+  }
+
+  // 包裹 Level.done：成功→标记步骤完成并清错误反馈；失败→记录尝试并展示错误反馈
+  if (typeof Level !== 'undefined' && Level && typeof Level.done === 'function') {
+    var _origDoneR2 = Level.done.bind(Level);
+    Level.done = function () {
+      var id = this.current;
+      var rep = (typeof LevelExperienceRegistry !== 'undefined') ? LevelExperienceRegistry[id] : null;
+      var isR3 = !!(rep && R3_LEVELS.indexOf(id) >= 0);
+      try {
+        if (isR3) {
+          var steps = rep.interactionSteps || [];
+          InteractionProgress.init(id, steps);
+          InteractionProgress._refreshGate(id);
+        }
+      } catch (e) {}
+      _origDoneR2.apply(this, arguments);
+      try {
+        if (isR3) {
+          if (this._completing) {
+            // 成功：标记全部步骤完成，清除该关错误反馈
+            (rep.interactionSteps || []).forEach(function (s) { InteractionProgress.complete(id, s.id); });
+            InteractionProgress._refreshGate(id);
+            ErrorFeedback.clear(id);
+          } else {
+            // 失败尝试：记录并展示渐进式错误反馈（不泄露答案、不绕过 gate）
+            ErrorFeedback.recordAttempt(id);
+            ErrorFeedback.show(id, rep.errorHints);
+          }
+          InteractionProgress._refreshGate(id);
+        }
+      } catch (e) {}
+      return;
+    };
+  }
+
+  /* ---- 暴露到全局，供测试访问 ---- */
+  window.InteractionProgress = InteractionProgress;
+  window.ErrorFeedback = ErrorFeedback;
+  window.Round3Levels = R3_LEVELS;
+
+  /* ---- 注入样式（自包含，不依赖既有 class） ---- */
+  (function injectCSS() {
+    try {
+      var s = document.createElement('style');
+      s.textContent =
+        '.r3-iprog-panel{border:2px dashed #2a7;background:#f3fffa;border-radius:12px;padding:12px 14px;margin-bottom:14px;box-shadow:0 2px 0 rgba(0,0,0,.06)}' +
+        '.r3-iprog{font-size:13px;line-height:1.7}' +
+        '.r3-ip-head{font-weight:900;color:#1f6b4a;margin-bottom:8px}' +
+        '.r3-ip-row{padding:3px 0}' +
+        '.r3-ip-steps{margin:4px 0 4px 18px;padding:0}' +
+        '.r3-ip-step.current{font-weight:800;color:#1f6b4a}' +
+        '.r3-ip-step.done{color:#888}' +
+        '.r3-err{border:2px solid #c0392b;background:#fff5f4;border-radius:12px;padding:12px 14px;margin:14px 0;box-shadow:0 2px 0 rgba(0,0,0,.06)}' +
+        '.r3-err-head{font-weight:900;color:#c0392b;margin-bottom:8px}' +
+        '.r3-err-row{padding:3px 0;line-height:1.7}';
+      if (document.head) document.head.appendChild(s);
+    } catch (e) {}
+  })();
+})();
