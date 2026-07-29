@@ -25,7 +25,7 @@
       '能说清什么时候必须自己核实'
     ],
     capabilitySummary: '你已建立对 AI 的基本认知框架',
-    nextReason: '下一站「黑窗口村」：把认知落地，自己动手敲命令行',
+    nextReason: '下一关继续认识不同 AI 和大模型，逐步打牢 AI 基础认知。',
     cognitiveNote: 'AI“不是真的懂”——它只是在预测“下一个最可能出现的词”',
     splashId: 'J01',
     completionTier: 'normal'
@@ -41,7 +41,7 @@
       '操作完成后能看懂验证提示'
     ],
     capabilitySummary: '你已迈出终端操作第一步',
-    nextReason: '下一站「代码森林」：终端玩熟了，该学程序怎么思考',
+    nextReason: '下一关继续练习查看当前目录和文件内容，把终端基本动作练熟。',
     cmdEchoNote: '看终端要分两半：你敲的是“命令”，电脑回的是“结果”',
     splashId: 'J01',
     completionTier: 'normal'
@@ -119,8 +119,12 @@
     nextReason: '下一站「工作流工场」：把脚本+AI+人串成自动化流水线',
     keepGate: true,
     gateNote: '门禁不变：必须三个场景同版本全部通过，finalPassedAt 才会写入；缺任一都不算完成',
+    worldResult: '你为 Agent 配置了目标、工具、权限、停止条件与异常处理，并在 normal / missing-info / high-risk 三个真实场景全部通过验收。',
+    verifiedCapabilities: '定边界、设权限、配工具、验安全、控风险',
+    worldCert: 'Agent 指挥认证（W6 智能体工坊）',
+    nextWorldPreview: '下一站「工作流工场」：把脚本 + AI + 人串成自动化流水线。',
     splashId: 'J01',
-    completionTier: 'capability'
+    completionTier: 'boss'
   };
 
   LevelExperienceRegistry['w7_7'] = {
@@ -136,7 +140,7 @@
     nextReason: '这是最后一站——之后你就能用 AI 真正开始干活',
     keepGate: true,
     gateNote: '门禁不变：workflow_sequence 与 workflow_builder 通过、三场景同版本验收，finalPassedAt 才写入',
-    worldName: '智能体工坊',
+    worldName: '工作流工场',
     capabilityList: '配置 Agent、设计工作流、三场景验收、带审批/重试/验收的自动化',
     realTask: '给“订单→库存→补货建议”这类流程配一条带人工确认的工作流',
     nextPurpose: '理解程序从代码到运行的完整链路之后，你能独立设计可投产的 AI 工作流',
@@ -242,7 +246,7 @@
     }
     if (tier === 'boss') {
       return this._row('本世界综合任务结果', o.worldResult || '') +
-        this._row('已验证的能力', o.verifiedCapabilities || '') +
+        this._row('已验证能力', o.verifiedCapabilities || '') +
         this._row('世界认证', o.worldCert || '') +
         this._row('下一世界预告', o.nextWorldPreview || '');
     }
@@ -299,7 +303,8 @@
 
   Completion.hide = function () {
     if (this._modal) this._modal.classList.remove('active');
-    this._submitted = false;
+    // 注意: _submitted 不在 hide() 复位, 而在 show() 复位 —— 这样「返回地图 / 继续」按钮
+    // 在弹窗关闭后再次(程序化)点击也不会重复触发 onBack / onContinue, 真正实现单次执行。
   };
 
   /* ------------------------------------------------------------------
@@ -369,6 +374,18 @@
     else box.appendChild(panel);
   };
 
+  Round2Exp.nextWorldFirstLevel = function (id) {
+    try {
+      var wk = LevelData[id] && LevelData[id].world;
+      if (!wk || !WORLDS) return null;
+      var keys = Object.keys(WORLDS);
+      var idx = keys.indexOf(wk);
+      if (idx < 0 || idx + 1 >= keys.length) return null;
+      var nw = WORLDS[keys[idx + 1]];
+      return (nw && nw.levels && nw.levels[0]) || null;
+    } catch (e) { return null; }
+  };
+
   Round2Exp.handleCompletion = function (id, rep) {
     var _realStart = Game.startLevel, _realBack = Game.backToMap;
     // 吞掉原 done() 在 1400ms 调度的自动跳转，改为弹出统一完成反馈
@@ -382,6 +399,8 @@
       var nextCore = isCore && (typeof getNextCoreLevel === 'function') ? getNextCoreLevel(id) : null;
       var canAdvance = !!(nextCore && State.levels[nextCore] &&
         (typeof _realUnlocked === 'function' ? _realUnlocked(nextCore) : true));
+      var nwf = Round2Exp.nextWorldFirstLevel(id);
+      var canEnterWorld = !!(nwf && (typeof _realUnlocked === 'function' ? _realUnlocked(nwf) : true));
       Completion.show({
         tier: rep.completionTier,
         levelId: id,
@@ -395,9 +414,20 @@
         capabilityList: rep.capabilityList,
         realTask: rep.realTask,
         nextPurpose: rep.nextPurpose,
+        // Boss / World 完成反馈所需的专属字段
+        worldResult: rep.worldResult,
+        verifiedCapabilities: rep.verifiedCapabilities,
+        worldCert: rep.worldCert,
+        nextWorldPreview: rep.nextWorldPreview,
         onContinue: function () {
+          if (rep.completionTier === 'boss') {
+            // Boss 关「进入下一世界」：合法时进入下一世界首关，否则返回地图
+            if (canEnterWorld) { _realStart(nwf); return; }
+            _realBack(); return;
+          }
           if (canAdvance) _realStart(nextCore); else _realBack();
-        }
+        },
+        onBack: function () { _realBack(); }   // 真实调用原始 Game.backToMap()
       });
     }, 1500);
   };

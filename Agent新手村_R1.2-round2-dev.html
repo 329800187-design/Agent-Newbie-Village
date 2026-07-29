@@ -3323,7 +3323,7 @@ Game.init();window.Game=Game;
       '能说清什么时候必须自己核实'
     ],
     capabilitySummary: '你已建立对 AI 的基本认知框架',
-    nextReason: '下一站「黑窗口村」：把认知落地，自己动手敲命令行',
+    nextReason: '下一关继续认识不同 AI 和大模型，逐步打牢 AI 基础认知。',
     cognitiveNote: 'AI“不是真的懂”——它只是在预测“下一个最可能出现的词”',
     splashId: 'J01',
     completionTier: 'normal'
@@ -3339,7 +3339,7 @@ Game.init();window.Game=Game;
       '操作完成后能看懂验证提示'
     ],
     capabilitySummary: '你已迈出终端操作第一步',
-    nextReason: '下一站「代码森林」：终端玩熟了，该学程序怎么思考',
+    nextReason: '下一关继续练习查看当前目录和文件内容，把终端基本动作练熟。',
     cmdEchoNote: '看终端要分两半：你敲的是“命令”，电脑回的是“结果”',
     splashId: 'J01',
     completionTier: 'normal'
@@ -3417,8 +3417,12 @@ Game.init();window.Game=Game;
     nextReason: '下一站「工作流工场」：把脚本+AI+人串成自动化流水线',
     keepGate: true,
     gateNote: '门禁不变：必须三个场景同版本全部通过，finalPassedAt 才会写入；缺任一都不算完成',
+    worldResult: '你为 Agent 配置了目标、工具、权限、停止条件与异常处理，并在 normal / missing-info / high-risk 三个真实场景全部通过验收。',
+    verifiedCapabilities: '定边界、设权限、配工具、验安全、控风险',
+    worldCert: 'Agent 指挥认证（W6 智能体工坊）',
+    nextWorldPreview: '下一站「工作流工场」：把脚本 + AI + 人串成自动化流水线。',
     splashId: 'J01',
-    completionTier: 'capability'
+    completionTier: 'boss'
   };
 
   LevelExperienceRegistry['w7_7'] = {
@@ -3434,7 +3438,7 @@ Game.init();window.Game=Game;
     nextReason: '这是最后一站——之后你就能用 AI 真正开始干活',
     keepGate: true,
     gateNote: '门禁不变：workflow_sequence 与 workflow_builder 通过、三场景同版本验收，finalPassedAt 才写入',
-    worldName: '智能体工坊',
+    worldName: '工作流工场',
     capabilityList: '配置 Agent、设计工作流、三场景验收、带审批/重试/验收的自动化',
     realTask: '给“订单→库存→补货建议”这类流程配一条带人工确认的工作流',
     nextPurpose: '理解程序从代码到运行的完整链路之后，你能独立设计可投产的 AI 工作流',
@@ -3452,15 +3456,15 @@ Game.init();window.Game=Game;
     splash: '开场插画', onboard: '入村引导', character: '角色', node: '节点',
     done: '完成插画', background: '背景', boss: 'Boss', certificate: '认证', ui: '界面元素'
   };
-    AssetRegistry.splash = {"J01": "splash/J01.png", "J02": "splash/J02.png"};
-  AssetRegistry.onboard = {"K01": "onboard/K01.png", "K02": "onboard/K02.png", "K03": "onboard/K03.png"};
-  AssetRegistry.character = {};
-  AssetRegistry.node = {};
-  AssetRegistry.done = {"G01": "done/G01.png", "G02": "done/G02.png", "G03": "done/G03.png", "G04": "done/G04.png", "G05": "done/G05.png", "G06": "done/G06.png", "G07": "done/G07.png", "G08": "done/G08.png", "G09": "done/G09.png", "G10": "done/G10.png", "G11": "done/G11.png", "G12": "done/G12.png", "G13": "done/G13.png", "G14": "done/G14.png", "G15": "done/G15.png", "G16": "done/G16.png", "G17": "done/G17.png", "G18": "done/G18.png", "G19": "done/G19.png", "G20": "done/G20.png", "G21": "done/G21.png", "G22": "done/G22.png", "G23": "done/G23.png", "G24": "done/G24.png", "G25": "done/G25.png", "G26": "done/G26.png", "G27": "done/G27.png", "G28": "done/G28.png", "G29": "done/G29.png", "G30": "done/G30.png", "G31": "done/G31.png", "G32": "done/G32.png", "G33": "done/G33.png", "G34": "done/G34.png", "G35": "done/G35.png", "G36": "done/G36.png", "G37": "done/G37.png", "G38": "done/G38.png", "G39": "done/G39.png", "G40": "done/G40.png", "G41": "done/G41.png", "G42": "done/G42.png", "G43": "done/G43.png", "G44": "done/G44.png", "G45": "done/G45.png", "G46": "done/G46.png", "G47": "done/G47.png", "G48": "done/G48.png", "G49": "done/G49.png", "G50": "done/G50.png", "G51": "done/G51.png", "G52": "done/G52.png", "G53": "done/G53.png", "G54": "done/G54.png", "G55": "done/G55.png", "G56": "done/G56.png", "G57": "done/G57.png", "G58": "done/G58.png", "G59": "done/G59.png", "G60": "done/G60.png", "G61": "done/G61.png", "G62": "done/G62.png", "G63": "done/G63.png", "G64": "done/G64.png", "G65": "done/G65.png", "G66": "done/G66.png", "G67": "done/G67.png", "G68": "done/G68.png", "G69": "done/G69.png", "G70": "done/G70.png"};
-  AssetRegistry.background = {};
-  AssetRegistry.boss = {"D01": "boss/D01.png", "D02": "boss/D02.png", "D03": "boss/D03.png", "D04": "boss/D04.png", "D05": "boss/D05.png", "D06": "boss/D06.png", "D07": "boss/D07.png", "D08": "boss/D08.png"};
-  AssetRegistry.certificate = {};
-  AssetRegistry.ui = {"U01": "ui/U01.png"};
+    AssetRegistry.splash = {"J01": "assets/splash/J01.png", "J02": "assets/splash/J02.png"};
+  AssetRegistry.onboard = {"K01": "assets/onboard/K01.png", "K02": "assets/onboard/K02.png", "K03": "assets/onboard/K03.png"};
+  AssetRegistry.character = {"peipei:A07": "assets/peipei/A07.png", "kuro:H01": "assets/kuro/H01.png"};
+  AssetRegistry.node = {"C01": "assets/nodes/C01.png", "C02": "assets/nodes/C02.png", "C03": "assets/nodes/C03.png", "C04": "assets/nodes/C04.png", "C05": "assets/nodes/C05.png", "C06": "assets/nodes/C06.png", "C07": "assets/nodes/C07.png", "C08": "assets/nodes/C08.png", "C09": "assets/nodes/C09.png", "C10": "assets/nodes/C10.png", "C11": "assets/nodes/C11.png", "C12": "assets/nodes/C12.png", "C13": "assets/nodes/C13.png", "C14": "assets/nodes/C14.png", "C15": "assets/nodes/C15.png", "C16": "assets/nodes/C16.png", "C17": "assets/nodes/C17.png", "C18": "assets/nodes/C18.png", "C19": "assets/nodes/C19.png", "C20": "assets/nodes/C20.png", "C21": "assets/nodes/C21.png", "C22": "assets/nodes/C22.png", "C23": "assets/nodes/C23.png", "C24": "assets/nodes/C24.png", "C25": "assets/nodes/C25.png", "C26": "assets/nodes/C26.png", "C27": "assets/nodes/C27.png", "C28": "assets/nodes/C28.png", "C29": "assets/nodes/C29.png", "C30": "assets/nodes/C30.png", "C31": "assets/nodes/C31.png", "C32": "assets/nodes/C32.png", "C33": "assets/nodes/C33.png", "C34": "assets/nodes/C34.png", "C35": "assets/nodes/C35.png", "C36": "assets/nodes/C36.png", "C37": "assets/nodes/C37.png", "C38": "assets/nodes/C38.png", "C39": "assets/nodes/C39.png", "C40": "assets/nodes/C40.png", "C41": "assets/nodes/C41.png", "C42": "assets/nodes/C42.png", "C43": "assets/nodes/C43.png", "C44": "assets/nodes/C44.png", "C45": "assets/nodes/C45.png", "C46": "assets/nodes/C46.png", "C47": "assets/nodes/C47.png", "C48": "assets/nodes/C48.png", "C49": "assets/nodes/C49.png", "C50": "assets/nodes/C50.png", "C51": "assets/nodes/C51.png", "C52": "assets/nodes/C52.png", "C53": "assets/nodes/C53.png", "C54": "assets/nodes/C54.png", "C55": "assets/nodes/C55.png", "C56": "assets/nodes/C56.png", "C57": "assets/nodes/C57.png", "C58": "assets/nodes/C58.png", "C59": "assets/nodes/C59.png", "C60": "assets/nodes/C60.png", "C61": "assets/nodes/C61.png", "C62": "assets/nodes/C62.png", "C63": "assets/nodes/C63.png", "C64": "assets/nodes/C64.png", "C65": "assets/nodes/C65.png", "C66": "assets/nodes/C66.png", "C67": "assets/nodes/C67.png", "C68": "assets/nodes/C68.png", "C69": "assets/nodes/C69.png", "C70": "assets/nodes/C70.png"};
+  AssetRegistry.done = {"G01": "assets/done/G01.png", "G02": "assets/done/G02.png", "G03": "assets/done/G03.png", "G04": "assets/done/G04.png", "G05": "assets/done/G05.png", "G06": "assets/done/G06.png", "G07": "assets/done/G07.png", "G08": "assets/done/G08.png", "G09": "assets/done/G09.png", "G10": "assets/done/G10.png", "G11": "assets/done/G11.png", "G12": "assets/done/G12.png", "G13": "assets/done/G13.png", "G14": "assets/done/G14.png", "G15": "assets/done/G15.png", "G16": "assets/done/G16.png", "G17": "assets/done/G17.png", "G18": "assets/done/G18.png", "G19": "assets/done/G19.png", "G20": "assets/done/G20.png", "G21": "assets/done/G21.png", "G22": "assets/done/G22.png", "G23": "assets/done/G23.png", "G24": "assets/done/G24.png", "G25": "assets/done/G25.png", "G26": "assets/done/G26.png", "G27": "assets/done/G27.png", "G28": "assets/done/G28.png", "G29": "assets/done/G29.png", "G30": "assets/done/G30.png", "G31": "assets/done/G31.png", "G32": "assets/done/G32.png", "G33": "assets/done/G33.png", "G34": "assets/done/G34.png", "G35": "assets/done/G35.png", "G36": "assets/done/G36.png", "G37": "assets/done/G37.png", "G38": "assets/done/G38.png", "G39": "assets/done/G39.png", "G40": "assets/done/G40.png", "G41": "assets/done/G41.png", "G42": "assets/done/G42.png", "G43": "assets/done/G43.png", "G44": "assets/done/G44.png", "G45": "assets/done/G45.png", "G46": "assets/done/G46.png", "G47": "assets/done/G47.png", "G48": "assets/done/G48.png", "G49": "assets/done/G49.png", "G50": "assets/done/G50.png", "G51": "assets/done/G51.png", "G52": "assets/done/G52.png", "G53": "assets/done/G53.png", "G54": "assets/done/G54.png", "G55": "assets/done/G55.png", "G56": "assets/done/G56.png", "G57": "assets/done/G57.png", "G58": "assets/done/G58.png", "G59": "assets/done/G59.png", "G60": "assets/done/G60.png", "G61": "assets/done/G61.png", "G62": "assets/done/G62.png", "G63": "assets/done/G63.png", "G64": "assets/done/G64.png", "G65": "assets/done/G65.png", "G66": "assets/done/G66.png", "G67": "assets/done/G67.png", "G68": "assets/done/G68.png", "G69": "assets/done/G69.png", "G70": "assets/done/G70.png"};
+  AssetRegistry.background = {"B01": "assets/bg/B01.png", "B03": "assets/bg/B03.png", "B05": "assets/bg/B05.png", "B07": "assets/bg/B07.png", "B09": "assets/bg/B09.png", "B11": "assets/bg/B11.png", "B13": "assets/bg/B13.png", "B15": "assets/bg/B15.png"};
+  AssetRegistry.boss = {"D01": "assets/boss/D01.png", "D02": "assets/boss/D02.png", "D03": "assets/boss/D03.png", "D04": "assets/boss/D04.png", "D05": "assets/boss/D05.png", "D06": "assets/boss/D06.png", "D07": "assets/boss/D07.png", "D08": "assets/boss/D08.png"};
+  AssetRegistry.certificate = {"E01": "assets/cert/E01.png", "E02": "assets/cert/E02.png", "E03": "assets/cert/E03.png", "E04": "assets/cert/E04.png", "E05": "assets/cert/E05.png", "E06": "assets/cert/E06.png", "E07": "assets/cert/E07.png", "E08": "assets/cert/E08.png"};
+  AssetRegistry.ui = {"U01": "assets/ui/U01.png"};
   AssetRegistry.get = function (type, id) {
     if (!type || !id) return { ok: false, reason: '参数缺失' };
     var bucket = this[type];
@@ -3548,7 +3552,7 @@ Game.init();window.Game=Game;
     }
     if (tier === 'boss') {
       return this._row('本世界综合任务结果', o.worldResult || '') +
-        this._row('已验证的能力', o.verifiedCapabilities || '') +
+        this._row('已验证能力', o.verifiedCapabilities || '') +
         this._row('世界认证', o.worldCert || '') +
         this._row('下一世界预告', o.nextWorldPreview || '');
     }
@@ -3605,7 +3609,8 @@ Game.init();window.Game=Game;
 
   Completion.hide = function () {
     if (this._modal) this._modal.classList.remove('active');
-    this._submitted = false;
+    // 注意: _submitted 不在 hide() 复位, 而在 show() 复位 —— 这样「返回地图 / 继续」按钮
+    // 在弹窗关闭后再次(程序化)点击也不会重复触发 onBack / onContinue, 真正实现单次执行。
   };
 
   /* ------------------------------------------------------------------
@@ -3675,6 +3680,18 @@ Game.init();window.Game=Game;
     else box.appendChild(panel);
   };
 
+  Round2Exp.nextWorldFirstLevel = function (id) {
+    try {
+      var wk = LevelData[id] && LevelData[id].world;
+      if (!wk || !WORLDS) return null;
+      var keys = Object.keys(WORLDS);
+      var idx = keys.indexOf(wk);
+      if (idx < 0 || idx + 1 >= keys.length) return null;
+      var nw = WORLDS[keys[idx + 1]];
+      return (nw && nw.levels && nw.levels[0]) || null;
+    } catch (e) { return null; }
+  };
+
   Round2Exp.handleCompletion = function (id, rep) {
     var _realStart = Game.startLevel, _realBack = Game.backToMap;
     // 吞掉原 done() 在 1400ms 调度的自动跳转，改为弹出统一完成反馈
@@ -3688,6 +3705,8 @@ Game.init();window.Game=Game;
       var nextCore = isCore && (typeof getNextCoreLevel === 'function') ? getNextCoreLevel(id) : null;
       var canAdvance = !!(nextCore && State.levels[nextCore] &&
         (typeof _realUnlocked === 'function' ? _realUnlocked(nextCore) : true));
+      var nwf = Round2Exp.nextWorldFirstLevel(id);
+      var canEnterWorld = !!(nwf && (typeof _realUnlocked === 'function' ? _realUnlocked(nwf) : true));
       Completion.show({
         tier: rep.completionTier,
         levelId: id,
@@ -3701,9 +3720,20 @@ Game.init();window.Game=Game;
         capabilityList: rep.capabilityList,
         realTask: rep.realTask,
         nextPurpose: rep.nextPurpose,
+        // Boss / World 完成反馈所需的专属字段
+        worldResult: rep.worldResult,
+        verifiedCapabilities: rep.verifiedCapabilities,
+        worldCert: rep.worldCert,
+        nextWorldPreview: rep.nextWorldPreview,
         onContinue: function () {
+          if (rep.completionTier === 'boss') {
+            // Boss 关「进入下一世界」：合法时进入下一世界首关，否则返回地图
+            if (canEnterWorld) { _realStart(nwf); return; }
+            _realBack(); return;
+          }
           if (canAdvance) _realStart(nextCore); else _realBack();
-        }
+        },
+        onBack: function () { _realBack(); }   // 真实调用原始 Game.backToMap()
       });
     }, 1500);
   };

@@ -216,6 +216,21 @@ def main():
             log(f"[FAIL] {nm}")
             log("       跳过: Chromium 不可用")
 
+    # ── 25-26 Round2-R1 精准修复新增测试 ──
+    round2_r1_tests = [
+        ("25. test_completion_navigation.js", "tests/test_completion_navigation.js"),
+        ("26. test_round2_metadata_consistency.js", "tests/test_round2_metadata_consistency.js"),
+    ]
+    if pw_ok:
+        log("\n── Round2-R1 精准修复测试 ──")
+        for name, rel in round2_r1_tests:
+            run_step(name, ["node", rel])
+    else:
+        for nm, _ in round2_r1_tests:
+            RESULTS.append((nm, False, 1, 0.0))
+            log(f"[FAIL] {nm}")
+            log("       跳过: Chromium 不可用")
+
     return finish(args.log_name)
 
 
@@ -229,16 +244,21 @@ def finish(log_name):
             failed += 1
     log("=" * 62)
 
-    # 分组汇报: 原 20/20 与 Round2 新增 4 项 分开确认
+    # 分组汇报: 原 20/20 / Round2 4 项 / Round2-R1 2 项 分开确认
     orig = RESULTS[:20]
-    round2 = RESULTS[20:]
+    round2 = RESULTS[20:24]
+    round2_r1 = RESULTS[24:]
     orig_fail = sum(1 for _, ok, _, _ in orig if not ok)
     round2_fail = sum(1 for _, ok, _, _ in round2 if not ok)
+    round2_r1_fail = sum(1 for _, ok, _, _ in round2_r1 if not ok)
     log(f"原 20/20 测试组: {'全部通过' if orig_fail == 0 else str(orig_fail) + ' 项失败'} "
         f"({sum(1 for _, ok, _, _ in orig if ok)}/{len(orig)})")
     if round2:
-        log(f"Round2 新增测试: {'全部通过' if round2_fail == 0 else str(round2_fail) + ' 项失败'} "
+        log(f"Round2 骨架扩展测试: {'全部通过' if round2_fail == 0 else str(round2_fail) + ' 项失败'} "
             f"({sum(1 for _, ok, _, _ in round2 if ok)}/{len(round2)})")
+    if round2_r1:
+        log(f"Round2-R1 精准修复测试: {'全部通过' if round2_r1_fail == 0 else str(round2_r1_fail) + ' 项失败'} "
+            f"({sum(1 for _, ok, _, _ in round2_r1 if ok)}/{len(round2_r1)})")
 
     log("=" * 62)
     if failed == 0:

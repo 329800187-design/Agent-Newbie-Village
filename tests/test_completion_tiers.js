@@ -46,13 +46,18 @@ const REL2 = 'Agent新手村_R1.2-round2-dev.html';
         const cont = (document.querySelector('#r2-comp-actions .r2-comp-continue') || {}).textContent;
         const btns = document.querySelectorAll('#r2-comp-actions button').length;
         const allowClose = C._tiers[tier].allowClose === true;
-        return { active, title, icon, cont, btns, allowClose };
+        const backBtn = [].slice.call(document.querySelectorAll('#r2-comp-actions button'))
+          .find(b => b.className.indexOf('r2-comp-continue') < 0);
+        const backText = backBtn ? backBtn.textContent : null;
+        return { active, title, icon, cont, btns, allowClose, backText };
       }, { tier, exp: expect[tier] });
       rep.assert(r.active, `tier=${tier} 弹窗激活`);
       rep.assert(r.title === expect[tier].title, `tier=${tier} 标题正确 (${r.title})`);
       rep.assert(r.icon === expect[tier].icon, `tier=${tier} 图标正确 (${r.icon})`);
       rep.assert(r.cont === expect[tier].cont, `tier=${tier} 继续按钮文案 (${r.cont})`);
       rep.assert(r.btns === (r.allowClose ? 2 : 1), `tier=${tier} 按钮数符合(allowClose→2) (实际 ${r.btns})`);
+      if (r.allowClose) rep.assert(r.backText && r.backText.indexOf('返回地图') >= 0, `tier=${tier} 含「返回地图」按钮 (${r.backText})`);
+      else rep.assert(r.backText === null, `tier=${tier} 无「返回地图」按钮`);
       await page.evaluate(() => window.Completion.hide());
     }
 
@@ -70,6 +75,27 @@ const REL2 = 'Agent新手村_R1.2-round2-dev.html';
     });
     rep.assert(dup.n === 1, `每次 show+click 仅触发一次 onContinue (实际 ${dup.n})`);
     rep.assert(dup.guard, 'Completion 含 _submitted 防重复提交守卫');
+
+    // 「返回地图」按钮真实调用 onBack 且只执行一次(单元级)
+    const nav = await page.evaluate(() => {
+      const C = window.Completion;
+      let n = 0;
+      C.hide();
+      C.show({ tier: 'boss', levelId: 'nav', onBack: function () { n++; } });
+      const back = [].slice.call(document.querySelectorAll('#r2-comp-actions button'))
+        .find(b => b.textContent.indexOf('返回地图') >= 0);
+      if (back) back.click();
+      const afterFirst = n;
+      if (back) back.click();
+      const afterSecond = n;
+      const hidden = !(document.getElementById('r2-comp-modal').classList.contains('active'));
+      C.hide();
+      return { afterFirst, afterSecond, hidden, hasBack: !!back };
+    });
+    rep.assert(nav.hasBack, 'boss 弹窗单元级存在「返回地图」按钮');
+    rep.assert(nav.afterFirst === 1, `「返回地图」onBack 首次点击触发 1 次 (${nav.afterFirst})`);
+    rep.assert(nav.afterSecond === 1, `「返回地图」再次点击被单次执行守卫拦截 (${nav.afterSecond})`);
+    rep.assert(nav.hidden, '「返回地图」点击后弹窗关闭');
 
     // hide 后非激活
     const hidden = await page.evaluate(() => {
