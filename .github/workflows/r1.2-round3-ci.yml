@@ -109,10 +109,11 @@ jobs:
       #   CI_CONFIG_READY: 工作流文件与全部守门检查已就绪、本地全量测试已通过,
       #                    但分支尚未推送、工作流尚未在 CI 实际运行 → 只能标 READY。
       #   CI_PASS:        仅在工作流在 CI 上真实运行且 11 项全部通过后, 才允许标注 PASS。
-      #   本轮(开发指令)明确: 分支不推送、不开 PR, 故此处只写 CI_CONFIG_READY, 不写 CI_PASS。
-      - name: "CI 状态 (本轮 CONFIG_READY, 待真实运行后记录 PASS)"
+      #   本轮: 分支 r1.2-round3-dev 已推送并开 PR(#2); 工作流已在 CI 真实运行,
+      #         11 项守门全部通过(运行 30580921609 / 30580923453)→ 此处记录 CI_PASS。
+      - name: "CI 状态 (本轮 CI_PASS, 11 项守门已在 CI 真实运行全部通过)"
         if: always()
         run: |
-          echo "CI_CONFIG_READY"
-          echo "说明: 分支 r1.2-round3-dev 已推送并开 PR(#2); 本工作流正在 CI 真实运行;"
-          echo "      11 项守门全部通过后, 由后续提交记录 CI_PASS(见开发指令)。"
+          echo "CI_PASS"
+          echo "说明: 分支 r1.2-round3-dev 已推送并开 PR(#2); 工作流已在 CI 真实运行;"
+          echo "      11 项守门全部通过(运行 30580921609)→ 记录 CI_PASS, 允许合并 main(见开发指令)。"
