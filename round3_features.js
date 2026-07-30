@@ -211,9 +211,17 @@
         return { label: 'W6 · Agent 配置门禁', passed: false, status: 'error', error: e2.message };
       }
       try {
+        // 镜像原始引擎 W6 完成条件(不得仅凭 isCurrentRevisionPassed 放行):
+        //   configStatus==='submitted' && isCurrentRevisionPassed() && getConfig 与 configSnapshot 一致
+        var currentConfig6 = Sim.getConfig();
+        var passed6 =
+          Sim.state.configStatus === 'submitted' &&
+          typeof Sim.isCurrentRevisionPassed === 'function' &&
+          Sim.isCurrentRevisionPassed() === true &&
+          JSON.stringify(currentConfig6) === JSON.stringify(Sim.state.configSnapshot);
         return {
           label: 'W6 · Agent 配置门禁',
-          passed: !!(Sim.isCurrentRevisionPassed && Sim.isCurrentRevisionPassed()),
+          passed: !!passed6,
           status: Sim.state.configStatus || 'n/a'
         };
       } catch (e) {
@@ -233,9 +241,21 @@
         return { label: 'W7 · 工作流门禁', passed: false, status: 'error', error: e4.message };
       }
       try {
+        // 镜像原始引擎 W7 完成条件(额外要求 workflow_sequence / workflow_builder 已通过):
+        //   configStatus==='submitted' && isCurrentRevisionPassed() && getConfig 与 configSnapshot 一致
+        //   && interactionPassed.workflow_sequence === true && interactionPassed.workflow_builder === true
+        var currentConfig7 = WfSim.getConfig();
+        var ipW7 = (typeof Level !== 'undefined' && Level && Level.interactionPassed) || {};
+        var passed7 =
+          WfSim.state.configStatus === 'submitted' &&
+          typeof WfSim.isCurrentRevisionPassed === 'function' &&
+          WfSim.isCurrentRevisionPassed() === true &&
+          JSON.stringify(currentConfig7) === JSON.stringify(WfSim.state.configSnapshot) &&
+          ipW7.workflow_sequence === true &&
+          ipW7.workflow_builder === true;
         return {
           label: 'W7 · 工作流门禁',
-          passed: !!(WfSim.isCurrentRevisionPassed && WfSim.isCurrentRevisionPassed()),
+          passed: !!passed7,
           status: WfSim.state.configStatus || 'n/a'
         };
       } catch (e) {
@@ -620,20 +640,69 @@
     };
   }
 
-  // 包裹 Level.done：成功→标记剩余步骤完成并清错误反馈；失败→记录尝试并展示错误反馈
+  // 包裹 Level.done：真实门禁阻断(仅 W6/W7) + 成功/失败处理 + 异常恢复提交锁
+  // 核心修复: 原始引擎 Level.done 的门禁检查被 `typeof Sim!=='undefined'&&Sim.state`
+  //          守卫, 当 Sim/WfSim 缺失时门禁被绕过(level 被直接完成); WfSim.state 为 null
+  //          时引擎内部 isCurrentRevisionPassed 解引用抛错。此处统一在 _origDoneR2 之前
+  //          以 readGate(镜像引擎条件, fail-closed) 二次把关, 门禁未明确通过则阻止提交。
   if (typeof Level !== 'undefined' && Level && typeof Level.done === 'function') {
     var _origDoneR2 = Level.done.bind(Level);
     Level.done = function () {
       var id = this.current;
       var rep = (typeof LevelExperienceRegistry !== 'undefined') ? LevelExperienceRegistry[id] : null;
       var isR3 = !!(rep && R3_LEVELS.indexOf(id) >= 0);
+
+      // 前置: 保留已完成进度(避免每次提交清空), 并刷新门禁/重算/面板
       try {
         if (isR3) {
           var steps = rep.interactionSteps || [];
-          InteractionProgress.ensure(id, steps); // 提交前保留已完成步骤
+          InteractionProgress.ensure(id, steps);
+          InteractionProgress.sync(id);
         }
       } catch (e) { Round3Diagnostics.record('Level.done.pre', e); }
-      _origDoneR2.apply(this, arguments);
+
+      // ── 真实门禁阻断(仅 W6/W7): 门禁未明确通过 → 阻止进入原始完成流程 ──
+      if (isR3 && (id === 'w6_9' || id === 'w7_7')) {
+        var gateState = InteractionProgress.getState(id);
+        var gate = gateState && gateState.gate;
+        if (!gate || gate.passed !== true) {
+          this._completing = false;
+          InteractionProgress.fail(
+            id,
+            null,
+            gate && gate.status === 'error'
+              ? '门禁状态读取失败，请重新进入关卡后重试'
+              : '当前门禁尚未通过'
+          );
+          ErrorFeedback.recordAttempt(id);
+          if (rep && rep.errorHints) ErrorFeedback.show(id, rep.errorHints);
+          if (typeof Game !== 'undefined' && Game && typeof Game.toast === 'function') {
+            Game.toast(
+              gate && gate.status === 'error'
+                ? '门禁状态异常，已阻止提交'
+                : '请先完成当前关卡的全部真实门禁'
+            );
+          }
+          return false;
+        }
+      }
+
+      // ── 仅当门禁明确满足时才进入原始完成流程, 并捕获异常恢复提交锁 ──
+      var engineResult;
+      try {
+        engineResult = _origDoneR2.apply(this, arguments);
+      } catch (e) {
+        this._completing = false;
+        Round3Diagnostics.record('Level.done.engine', e);
+        if (isR3) {
+          InteractionProgress.fail(id, null, '提交过程出现异常');
+          ErrorFeedback.recordAttempt(id);
+          if (rep && rep.errorHints) ErrorFeedback.show(id, rep.errorHints);
+        }
+        return false;
+      }
+
+      // ── 事后处理: 成功→标记剩余步骤完成并清错误反馈; 失败→记录尝试并展示错误反馈 ──
       try {
         if (isR3) {
           if (this._completing) {
@@ -645,12 +714,12 @@
           } else {
             // 失败尝试：记录并展示渐进式错误反馈（不泄露答案、不绕过 gate）
             ErrorFeedback.recordAttempt(id);
-            ErrorFeedback.show(id, rep.errorHints);
+            if (rep && rep.errorHints) ErrorFeedback.show(id, rep.errorHints);
           }
           InteractionProgress._refreshGate(id);
         }
       } catch (e) { Round3Diagnostics.record('Level.done.post', e); }
-      return;
+      return engineResult;
     };
   }
 

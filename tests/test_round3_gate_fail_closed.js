@@ -52,7 +52,11 @@ const REL3 = 'Agent新手村_R1.2-round3-dev.html';
       const IP = window.InteractionProgress;
       try {
         if (typeof Sim !== 'undefined' && Sim) {
-          Sim.state = { configStatus: 'draft', configRevision: 0, passed: {}, configSnapshot: {}, failures: {} };
+          // R3 镜像 readGate 仅在 configStatus==='submitted' 时才进入 isCurrentRevisionPassed() 评估分支。
+          // 为真实验证「门禁读取抛错 → fail-closed」, 此处先置为 submitted, 并让 getConfig 安全返回,
+          // 使被强制抛错的 isCurrentRevisionPassed() 真正被求值并被 readGate 捕获。
+          Sim.state = { configStatus: 'submitted', configRevision: 0, passed: {}, configSnapshot: {}, failures: {} };
+          Sim.getConfig = function () { return {}; };
           Sim.isCurrentRevisionPassed = function () { throw new Error('forced gate read error'); };
         }
       } catch (e) {}

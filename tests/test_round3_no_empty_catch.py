@@ -84,13 +84,72 @@ def main():
         if m not in src:
             problems.append('InteractionProgress 缺少方法: ' + m)
 
+    # 6) Level.done 包装器守门(真实门禁阻断 + 异常恢复提交锁)
+    done_idx = src.find('Level.done = function')
+    if done_idx < 0:
+        problems.append('未找到 Level.done 包装器')
+    else:
+        ob = src.find('{', done_idx)
+        depth = 0
+        end = ob
+        for i in range(ob, len(src)):
+            if src[i] == '{':
+                depth += 1
+            elif src[i] == '}':
+                depth -= 1
+                if depth == 0:
+                    end = i
+                    break
+        wrapper = src[ob:end + 1]
+        # 6a) 门禁检查位于 _origDoneR2.apply 之前
+        gate_check = wrapper.find("id === 'w6_9' || id === 'w7_7'")
+        apply_idx = wrapper.find('_origDoneR2.apply')
+        if gate_check < 0:
+            problems.append('Level.done 包装器缺少 W6/W7 门禁检查')
+        elif apply_idx < 0:
+            problems.append('Level.done 包装器缺少 _origDoneR2.apply')
+        elif gate_check > apply_idx:
+            problems.append('门禁检查不在 _origDoneR2.apply 之前')
+        # 6b) gate.passed !== true 时 return false
+        if 'gate.passed !== true' not in wrapper:
+            problems.append('Level.done 包装器未检查 gate.passed !== true')
+        if wrapper.count('return false') < 1:
+            problems.append('Level.done 包装器缺少 return false 阻断')
+        # 6c) _origDoneR2.apply 位于 try/catch 内
+        pre_try = wrapper.rfind('try {', 0, apply_idx)
+        catch_idx = wrapper.find('catch (e)', pre_try)
+        if pre_try < 0 or catch_idx < 0:
+            problems.append('Level.done 包装器未用 try/catch 包裹 _origDoneR2.apply')
+        elif catch_idx < apply_idx:
+            problems.append('_origDoneR2.apply 未被 try/catch 包裹')
+        else:
+            # 6d) 该 catch 内恢复 this._completing=false 且记录 Level.done.engine
+            cb = wrapper.find('{', catch_idx)
+            depth = 0
+            cend = cb
+            for i in range(cb, len(wrapper)):
+                if wrapper[i] == '{':
+                    depth += 1
+                elif wrapper[i] == '}':
+                    depth -= 1
+                    if depth == 0:
+                        cend = i
+                        break
+            catch_body = wrapper[cb:cend + 1]
+            if 'this._completing = false' not in catch_body:
+                problems.append('Level.done 引擎 catch 未恢复 this._completing=false')
+            if "Round3Diagnostics.record('Level.done.engine', e)" not in catch_body:
+                problems.append('Level.done 引擎 catch 未调用 Round3Diagnostics.record')
+
     if problems:
         for p in problems:
             print('[FAIL]', p)
         sys.exit(1)
     print('OK: round3_features.js 无空 catch; 所有 catch 记录诊断且未降级为无门禁; '
           'Round3Diagnostics 已定义并暴露; InteractionProgress 含 sync/updatePanel/ensure/'
-          'currentLabel/clearFailure; readGate 门禁缺失分支 fail-closed')
+          'currentLabel/clearFailure; readGate 门禁缺失分支 fail-closed; '
+          'Level.done 包装器门禁检查位于 _origDoneR2.apply 之前、gate.passed!==true 时 '
+          'return、_origDoneR2.apply 受 try/catch 包裹且 catch 恢复 this._completing=false 并记录诊断')
     sys.exit(0)
 
 

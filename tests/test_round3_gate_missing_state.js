@@ -121,6 +121,79 @@ const REL3 = 'Agent新手村_R1.2-round3-dev.html';
     rep.assert(restored.label.indexOf('W6') >= 0, `还原后 W6 门禁标签正常 (${restored.label})`);
     rep.assert(restored.errs === 0, `还原后正常读取不再记录诊断 (${restored.errs})`);
 
+    // ═══ 真实 Level.done() 故障注入: 六种门禁缺失状态均不得绕过/抛错 ═══
+    // 在每种缺失状态下真实调用 Level.done(), 断言:
+    //   completed=false / _completing=false / 无抛出异常
+    //   gate.passed=false / gate.status='error' / submitAllowed=false / diagnostics>=1
+    const realDone = await page.evaluate(() => {
+      const IP = window.InteractionProgress;
+      const out = [];
+      const plan = [
+        { level: 'w6_9', kind: 'Sim', mode: 'undefined' },
+        { level: 'w6_9', kind: 'Sim', mode: 'null' },
+        { level: 'w6_9', kind: 'Sim', mode: 'stateNull' },
+        { level: 'w7_7', kind: 'WfSim', mode: 'undefined' },
+        { level: 'w7_7', kind: 'WfSim', mode: 'null' },
+        { level: 'w7_7', kind: 'WfSim', mode: 'stateNull' },
+      ];
+      plan.forEach((c, idx) => {
+        const orig = window[c.kind];
+        let thrown = false;
+        try {
+          // 先渲染关卡确保 level-content 存在(避免 ErrorFeedback 渲染诊断噪声)
+          try { Level.render(c.level); if (typeof Game !== 'undefined' && Game && Game.switch) Game.switch('level-page'); } catch (e) {}
+          // 设置缺失状态
+          if (c.mode === 'undefined') {
+            window[c.kind] = undefined;
+          } else if (c.mode === 'null') {
+            window[c.kind] = null;
+          } else { // stateNull
+            window[c.kind] = { state: null, isCurrentRevisionPassed: function () { return true; } };
+          }
+
+          window.Round3Diagnostics.clear();
+          IP.reset(c.level);
+          if (!State.levels[c.level]) State.levels[c.level] = {};
+          State.levels[c.level].completed = false;
+          State.levels[c.level].stars = State.levels[c.level].stars || 0;
+          State.levels[c.level].unlocked = true;
+          Level._completing = false;
+          Level.current = c.level;
+
+          try { Level.done(); } catch (e) { thrown = true; }
+
+          const st = IP.getState(c.level);
+          const g = st ? st.gate : null;
+          out.push({
+            idx,
+            level: c.level,
+            mode: c.mode,
+            thrown,
+            completed: State.levels[c.level].completed,
+            completing: Level._completing,
+            gatePassed: g ? g.passed : null,
+            gateStatus: g ? g.status : null,
+            submitAllowed: st ? st.submitAllowed : null,
+            errCount: window.Round3Diagnostics.errors.length,
+          });
+        } finally {
+          window[c.kind] = orig; // 还原, 避免污染后续用例
+        }
+      });
+      return out;
+    });
+
+    realDone.forEach((r, i) => {
+      const tag = `真实Level.done #${i + 1} (${r.level}/${r.mode})`;
+      rep.assert(r.thrown === false, `${tag}: Level.done() 未抛异常 (thrown=${r.thrown})`);
+      rep.assert(r.completed === false, `${tag}: State.levels.completed === false (${r.completed})`);
+      rep.assert(r.completing === false, `${tag}: Level._completing === false (${r.completing})`);
+      rep.assert(r.gatePassed === false, `${tag}: gate.passed === false (${r.gatePassed})`);
+      rep.assert(r.gateStatus === 'error', `${tag}: gate.status === 'error' (${r.gateStatus})`);
+      rep.assert(r.submitAllowed === false, `${tag}: submitAllowed === false (${r.submitAllowed})`);
+      rep.assert(r.errCount >= 1, `${tag}: Round3Diagnostics 记录 >=1 (${r.errCount})`);
+    });
+
     rep.assert(st.pageErrors.length === 0, `全程 pageerror = 0 (${st.pageErrors.slice(0, 3).join(' | ') || '0'})`);
     rep.assert(st.failedRequests.length === 0, `全程 requestfailed = 0 (${st.failedRequests.slice(0, 3).join(' | ') || '0'})`);
 

@@ -12,7 +12,7 @@
     21-27 Round2 / Round2-R1 / Round2-R2 扩展测试(原始 7 项)
     28-29 Round3 派生构建(夹具生成 + apply_round3.py)
     30-31 Round3 新增 Python 测试(2 项: 可复现构建 / 课程不变量)
-    32-39 Round3 新增 Node 测试(8 项: 交互进度 / 错误反馈 / 9 关接入 / 实时进度 / 门禁 fail-closed / 答案不泄露 / 门禁缺失 / 完成态一致性)
+    32-40 Round3 新增 Node 测试(9 项: 交互进度 / 错误反馈 / 9 关接入 / 实时进度 / 门禁 fail-closed / 答案不泄露 / 门禁缺失 / 完成态一致性 / 引擎真实提交门禁)
 
 每项输出 [PASS]/[FAIL] + 退出码; 失败附最后 50 行日志。
 任何一项失败 → 本脚本退出码非 0; 全部成功 → 打印 ALL TESTS PASS。
@@ -273,6 +273,7 @@ def main():
         ("37. test_round3_no_answer_leak.js", "tests/test_round3_no_answer_leak.js"),
         ("38. test_round3_gate_missing_state.js", "tests/test_round3_gate_missing_state.js"),
         ("39. test_round3_completion_state.js", "tests/test_round3_completion_state.js"),
+        ("40. test_round3_engine_gate_submission.js", "tests/test_round3_engine_gate_submission.js"),
     ]
     if pw_ok:
         log("\n── Round3 新增 Node 测试 ──")
@@ -284,9 +285,9 @@ def main():
             log(f"[FAIL] {nm}")
             log("       跳过: Chromium 不可用")
 
-    # ── 40 Round3 静态扫描(不依赖 Chromium) ──
+    # ── 41 Round3 静态扫描(不依赖 Chromium) ──
     round3_py_static = [
-        ("40. test_round3_no_empty_catch.py", "tests/test_round3_no_empty_catch.py"),
+        ("41. test_round3_no_empty_catch.py", "tests/test_round3_no_empty_catch.py"),
     ]
     log("\n── Round3 静态扫描 ──")
     for name, rel in round3_py_static:
@@ -325,13 +326,13 @@ def finish(log_name):
     grp("Round2-R1 精准修复 25-26", RESULTS[24:26])
     grp("Round2-R2 阻断修复 27", RESULTS[26:27])
     if round3:
-        log(f"Round3 相关 {len(round3)} 步(夹具生成+派生构建+8 新增 Node 测试+1 静态扫描+2 派生 Python 测试): "
+        log(f"Round3 相关 {len(round3)} 步(夹具生成+派生构建+9 新增 Node 测试+1 静态扫描+2 派生 Python 测试): "
             f"{'全部通过' if round3_fail == 0 else str(round3_fail) + ' 项失败'} "
             f"({sum(1 for _, ok, _, _ in round3 if ok)}/{len(round3)})")
         grp("Round3 派生构建 28-29", round3[:2])
         grp("Round3 新增 Python 测试 30-31", round3[2:4])
-        grp("Round3 新增 Node 测试 32-39", round3[4:12])
-        grp("Round3 静态扫描 40", round3[12:13])
+        grp("Round3 新增 Node 测试 32-40", round3[4:13])
+        grp("Round3 静态扫描 41", round3[13:14])
 
     log("=" * 62)
     if failed == 0:
