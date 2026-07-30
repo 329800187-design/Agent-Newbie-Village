@@ -284,9 +284,9 @@ def main():
             log(f"[FAIL] {nm}")
             log("       跳过: Chromium 不可用")
 
-    # ── 38 Round3 静态扫描(不依赖 Chromium) ──
+    # ── 40 Round3 静态扫描(不依赖 Chromium) ──
     round3_py_static = [
-        ("38. test_round3_no_empty_catch.py", "tests/test_round3_no_empty_catch.py"),
+        ("40. test_round3_no_empty_catch.py", "tests/test_round3_no_empty_catch.py"),
     ]
     log("\n── Round3 静态扫描 ──")
     for name, rel in round3_py_static:
