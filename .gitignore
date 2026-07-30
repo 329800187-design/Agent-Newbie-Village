@@ -20,10 +20,14 @@ Thumbs.db
 __pycache__/
 tests/logs/
 *.bak.html
-assets_candidates/
+# 注: assets_candidates/ 下的 J02 候选图是真实游戏素材, 被 test_asset_manifest.py 依赖, 需入库 (不再忽略)
 # Phase 1/2 本地核验产物 (非本轮交付)
 local_run_all_tests.log
 local_alpha2_test.log
 local_file_inventory.txt
 local_git_status.txt
 current_commit.txt
+
+# Round3 自动生成的测试夹具与构建清单 (确定性, 可清理, 不入库)
+tests/fixtures/assets/
+R1.2_Round3_build_manifest.txt

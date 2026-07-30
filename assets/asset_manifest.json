@@ -1,0 +1,1680 @@
+{
+ "manifestVersion": 1,
+ "project": "Agent新手村 v1.0 骨架",
+ "statusEnum": [
+  "final",
+  "placeholder",
+  "candidate",
+  "deprecated"
+ ],
+ "zipPolicy": {
+  "skeleton": [
+   "final",
+   "placeholder"
+  ],
+  "release": [
+   "final"
+  ]
+ },
+ "aspectTolerance": 0.05,
+ "assets": [
+  {
+   "path": "assets/bg/B01.png",
+   "role": "world_bg",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/bg/B03.png",
+   "role": "world_bg",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/bg/B05.png",
+   "role": "world_bg",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/bg/B07.png",
+   "role": "world_bg",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/bg/B09.png",
+   "role": "world_bg",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/bg/B11.png",
+   "role": "world_bg",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/bg/B13.png",
+   "role": "world_bg",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/bg/B15.png",
+   "role": "world_bg",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/boss/D01.png",
+   "role": "world_boss",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/boss/D02.png",
+   "role": "world_boss",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/boss/D03.png",
+   "role": "world_boss",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/boss/D04.png",
+   "role": "world_boss",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/boss/D05.png",
+   "role": "world_boss",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/boss/D06.png",
+   "role": "world_boss",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/boss/D07.png",
+   "role": "world_boss",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/boss/D08.png",
+   "role": "world_boss",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/cert/E01.png",
+   "role": "world_cert",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/cert/E02.png",
+   "role": "world_cert",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/cert/E03.png",
+   "role": "world_cert",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/cert/E04.png",
+   "role": "world_cert",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/cert/E05.png",
+   "role": "world_cert",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/cert/E06.png",
+   "role": "world_cert",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/cert/E07.png",
+   "role": "world_cert",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/cert/E08.png",
+   "role": "world_cert",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G01.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_1",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G02.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_4",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G03.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_5",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G04.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_6",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G05.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_11",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G06.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_1;w1_p1",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G07.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_2",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G08.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_3",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G09.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_4",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G10.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_5",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G11.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_6",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G12.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_7",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G13.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_8",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G14.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "w2_1",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G15.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "w2_2",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G16.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "w2_3;w2_p1",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G17.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "w2_4",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G18.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "w2_5",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G19.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "w2_6",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G20.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_2",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G21.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_3",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G22.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_7",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G23.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_8",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G24.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_9",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G25.png",
+   "role": "level_done",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_10",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/done/G26.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_1",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G27.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_2",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G28.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_3",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G29.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_4",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G30.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_5",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G31.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_6",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G32.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_7",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G33.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_8",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G34.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_9",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G35.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_10",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G36.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_11",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G37.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_12",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G38.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_13",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G39.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w4_1",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G40.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w4_2;w3_c1",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G41.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w4_3",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G42.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w4_4",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G43.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w4_5",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G44.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w4_6",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G45.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w4_7",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G46.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w4_8",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G47.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "w5_1",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G48.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "w5_2",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G49.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "w5_3",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G50.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w5_4;w4_s1",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G51.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "w5_5",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G52.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "w5_6",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G53.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "w5_7",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G54.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "w5_8",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G55.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_1",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G56.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_2",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G57.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_3",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G58.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_4",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G59.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_5",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G60.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_6",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G61.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_7",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G62.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_8",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G63.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_9",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G64.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "w7_1",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G65.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "w7_2",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G66.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "w7_3",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G67.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "w7_4",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G68.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "w7_5",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G69.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "w7_6",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/done/G70.png",
+   "role": "level_done",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "w7_7",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/kuro/H01.png",
+   "role": "mascot_kuro",
+   "status": "final",
+   "required": true,
+   "world": "",
+   "levelId": "",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C01.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_1",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C02.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_4",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C03.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_5",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C04.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_6",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C05.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_11",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C06.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_1;w1_p1",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C07.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_2",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C08.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_3",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C09.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_4",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C10.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_5",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C11.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_6",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C12.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_7",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C13.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "w1",
+   "levelId": "w1_8",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C14.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "w2_1",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C15.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "w2_2",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C16.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "w2_3;w2_p1",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C17.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "w2_4",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C18.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "w2_5",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C19.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "w2",
+   "levelId": "w2_6",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C20.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_2",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C21.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_3",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C22.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_7",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C23.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_8",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C24.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_9",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C25.png",
+   "role": "level_node",
+   "status": "final",
+   "required": true,
+   "world": "ai_camp",
+   "levelId": "ai_camp_10",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/nodes/C26.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_1",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C27.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_2",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C28.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_3",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C29.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_4",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C30.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_5",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C31.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_6",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C32.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_7",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C33.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_8",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C34.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_9",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C35.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_10",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C36.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_11",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C37.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_12",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C38.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w3_13",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C39.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w4_1",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C40.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w3",
+   "levelId": "w4_2;w3_c1",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C41.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w4_3",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C42.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w4_4",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C43.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w4_5",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C44.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w4_6",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C45.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w4_7",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C46.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w4_8",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C47.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "w5_1",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C48.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "w5_2",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C49.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "w5_3",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C50.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w4",
+   "levelId": "w5_4;w4_s1",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C51.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "w5_5",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C52.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "w5_6",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C53.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "w5_7",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C54.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w5",
+   "levelId": "w5_8",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C55.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_1",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C56.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_2",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C57.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_3",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C58.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_4",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C59.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_5",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C60.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_6",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C61.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_7",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C62.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_8",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C63.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w6",
+   "levelId": "w6_9",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C64.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "w7_1",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C65.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "w7_2",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C66.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "w7_3",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C67.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "w7_4",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C68.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "w7_5",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C69.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "w7_6",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/nodes/C70.png",
+   "role": "level_node",
+   "status": "placeholder",
+   "required": true,
+   "world": "w7",
+   "levelId": "w7_7",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/onboard/K01.png",
+   "role": "onboard_illustration",
+   "status": "placeholder",
+   "required": true,
+   "world": "",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/onboard/K02.png",
+   "role": "onboard_illustration",
+   "status": "placeholder",
+   "required": true,
+   "world": "",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/onboard/K03.png",
+   "role": "onboard_illustration",
+   "status": "placeholder",
+   "required": true,
+   "world": "",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "骨架占位素材，正式美术同名替换后改 status=final"
+  },
+  {
+   "path": "assets/peipei/A07.png",
+   "role": "mascot_peipei",
+   "status": "final",
+   "required": true,
+   "world": "",
+   "levelId": "",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/splash/J01.png",
+   "role": "splash",
+   "status": "final",
+   "required": true,
+   "world": "",
+   "levelId": "",
+   "expectedAspect": "1:1"
+  },
+  {
+   "path": "assets/splash/J02.png",
+   "role": "splash_reserved",
+   "status": "final",
+   "required": false,
+   "world": "",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "splash 唯一规范预留文件（brief 第九节）；候选版本 J02_1~6 已移至 assets_candidates/splash/"
+  },
+  {
+   "path": "assets/ui/U01.png",
+   "role": "ui_reserve",
+   "status": "candidate",
+   "required": false,
+   "world": "",
+   "levelId": "",
+   "expectedAspect": "1:1",
+   "notes": "运行时未引用；不进入用户 ZIP；贴皮阶段决定接入或废弃"
+  }
+ ]
+}
