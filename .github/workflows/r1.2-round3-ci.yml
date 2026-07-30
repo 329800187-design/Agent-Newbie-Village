@@ -33,12 +33,15 @@ jobs:
         with:
           node-version: "20"
 
-      - name: "3) JS 语法检查 (round3_features.js + 3 个 Round3 新增测试)"
+      - name: "3) JS 语法检查 (round3_features.js + 6 个 Round3 新增测试)"
         run: |
           node --check round3_features.js
           node --check tests/test_round3_interaction_progress.js
           node --check tests/test_round3_error_feedback.js
           node --check tests/test_round3_key_levels.js
+          node --check tests/test_round3_live_progress.js
+          node --check tests/test_round3_gate_fail_closed.js
+          node --check tests/test_round3_no_answer_leak.js
 
       - name: "4) 生成确定性 fixtures (无真实素材, 可清理)"
         run: |
@@ -54,10 +57,10 @@ jobs:
       - name: "7) 74/70/4/8 关卡计数校验"
         run: python tests/check_course_invariants.py
 
-      - name: "安装 playwright-core + Chromium (仅测试用, 不上传素材)"
+      - name: "安装 playwright-core + Chromium (含系统依赖, 仅测试用, 不上传素材)"
         run: |
           npm install
-          npx playwright-core install chromium
+          npx playwright-core install --with-deps chromium
 
       - name: "8-10) 运行全量测试套件 (27 原始 + Round3 新增, 含浏览器 pageerror/requestfailed 监控)"
         id: full
@@ -70,7 +73,7 @@ jobs:
 
       - name: "9) Round3 新增测试全部通过"
         if: always()
-        run: grep -E "Round3 相关 7 步.*全部通过" tests/logs/r1.2-round3-ci.log
+        run: grep -E "Round3 相关 11 步.*全部通过" tests/logs/r1.2-round3-ci.log
 
       - name: "10) pageerror = 0 且 requestfailed = 0"
         if: always()
@@ -85,3 +88,15 @@ jobs:
         run: |
           git status --porcelain
           test -z "$(git status --porcelain)"
+
+      # ── CI 状态区分 ──
+      #   CI_CONFIG_READY: 工作流文件与全部守门检查已就绪、本地全量测试已通过,
+      #                    但分支尚未推送、工作流尚未在 CI 实际运行 → 只能标 READY。
+      #   CI_PASS:        仅在工作流在 CI 上真实运行且 11 项全部通过后, 才允许标注 PASS。
+      #   本轮(开发指令)明确: 分支不推送、不开 PR, 故此处只写 CI_CONFIG_READY, 不写 CI_PASS。
+      - name: "CI 状态 (本轮仅 CONFIG_READY)"
+        if: always()
+        run: |
+          echo "CI_CONFIG_READY"
+          echo "说明: 分支 r1.2-round3-dev 未推送, 工作流未在 CI 实际运行;"
+          echo "      本地 38 项全量测试已通过(见 step 8-10), 守门检查清单已就绪。"

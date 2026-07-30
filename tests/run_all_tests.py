@@ -263,11 +263,14 @@ def main():
     for name, rel in round3_py_tests:
         run_step(name, [py, rel])
 
-    # ── 32-34 Round3 新增 Node 测试(需 Chromium) ──
+    # ── 32-37 Round3 新增 Node 测试(需 Chromium) ──
     round3_node_tests = [
         ("32. test_round3_interaction_progress.js", "tests/test_round3_interaction_progress.js"),
         ("33. test_round3_error_feedback.js", "tests/test_round3_error_feedback.js"),
         ("34. test_round3_key_levels.js", "tests/test_round3_key_levels.js"),
+        ("35. test_round3_live_progress.js", "tests/test_round3_live_progress.js"),
+        ("36. test_round3_gate_fail_closed.js", "tests/test_round3_gate_fail_closed.js"),
+        ("37. test_round3_no_answer_leak.js", "tests/test_round3_no_answer_leak.js"),
     ]
     if pw_ok:
         log("\n── Round3 新增 Node 测试 ──")
@@ -278,6 +281,14 @@ def main():
             RESULTS.append((nm, False, 1, 0.0))
             log(f"[FAIL] {nm}")
             log("       跳过: Chromium 不可用")
+
+    # ── 38 Round3 静态扫描(不依赖 Chromium) ──
+    round3_py_static = [
+        ("38. test_round3_no_empty_catch.py", "tests/test_round3_no_empty_catch.py"),
+    ]
+    log("\n── Round3 静态扫描 ──")
+    for name, rel in round3_py_static:
+        run_step(name, [py, rel])
 
     return finish(args.log_name)
 
@@ -312,12 +323,13 @@ def finish(log_name):
     grp("Round2-R1 精准修复 25-26", RESULTS[24:26])
     grp("Round2-R2 阻断修复 27", RESULTS[26:27])
     if round3:
-        log(f"Round3 相关 {len(round3)} 步(夹具生成+派生构建+5 新增测试): "
+        log(f"Round3 相关 {len(round3)} 步(夹具生成+派生构建+6 新增 Node 测试+1 静态扫描+2 派生 Python 测试): "
             f"{'全部通过' if round3_fail == 0 else str(round3_fail) + ' 项失败'} "
             f"({sum(1 for _, ok, _, _ in round3 if ok)}/{len(round3)})")
         grp("Round3 派生构建 28-29", round3[:2])
         grp("Round3 新增 Python 测试 30-31", round3[2:4])
-        grp("Round3 新增 Node 测试 32-34", round3[4:7])
+        grp("Round3 新增 Node 测试 32-37", round3[4:10])
+        grp("Round3 静态扫描 38", round3[10:11])
 
     log("=" * 62)
     if failed == 0:
