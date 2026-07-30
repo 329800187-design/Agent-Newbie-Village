@@ -67,6 +67,16 @@ jobs:
         run: |
           npm install
           npx -y playwright@1.61.1 install --with-deps chromium
+          # 精确算出浏览器可执行路径并导出, 供 _pw.js 通过 PLAYWRIGHT_CHROMIUM_PATH 直接定位
+          # (避免 --with-deps 以 root 安装到 /root/.cache 时默认缓存探测不一致)
+          CHROME=$(node -e "const{chromium}=require('playwright-core');process.stdout.write(chromium.executablePath())")
+          if [ ! -x "$CHROME" ]; then
+            ALT=$(ls -d /root/.cache/ms-playwright/chromium-*/chrome-linux/chrome 2>/dev/null | head -1)
+            [ -n "$ALT" ] && CHROME="$ALT"
+          fi
+          echo "Chromium 可执行路径: $CHROME"
+          test -x "$CHROME" || { echo "ERROR: chromium 未正确安装 ($CHROME)"; exit 1; }
+          echo "PLAYWRIGHT_CHROMIUM_PATH=$CHROME" >> "$GITHUB_ENV"
 
       - name: "8-10) 运行全量测试套件 (27 原始 + Round3 新增, 含浏览器 pageerror/requestfailed 监控)"
         id: full
