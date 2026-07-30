@@ -161,6 +161,16 @@
     return true;
   };
 
+  // 成功完成后清理旧失败原因(并随之重算 submitAllowed / 刷新面板)
+  InteractionProgress.clearFailure = function (levelId) {
+    var st = this._state[levelId];
+    if (!st) return false;
+    st.failReason = null;
+    this._recalc(levelId);
+    this.updatePanel(levelId);
+    return true;
+  };
+
   // 统一同步方法：刷新门禁 + 重算 + 刷新面板
   InteractionProgress.sync = function (levelId) {
     this._refreshGate(levelId);
@@ -186,10 +196,19 @@
   };
 
   // 只读读取门禁状态（W6/W7 读取 Sim/WfSim 真实状态；fail-closed 不降级为「无门禁」）
+  // 关键边界: 门禁对象或状态缺失 → 一律视为未通过 (passed:false / status:'error'),
+  //          并记录 Round3Diagnostics, 绝不降级为「无门禁」。
   function readGate(levelId) {
     if (levelId === 'w6_9') {
-      if (typeof Sim === 'undefined' || !Sim || !Sim.state) {
-        return { label: '无门禁（普通关卡）', passed: null, status: 'n/a' };
+      if (typeof Sim === 'undefined' || !Sim) {
+        var e1 = new Error('Sim 门禁对象不存在');
+        Round3Diagnostics.record('readGate:w6_9', e1);
+        return { label: 'W6 · Agent 配置门禁', passed: false, status: 'error', error: e1.message };
+      }
+      if (!Sim.state) {
+        var e2 = new Error('Sim.state 门禁状态不存在');
+        Round3Diagnostics.record('readGate:w6_9', e2);
+        return { label: 'W6 · Agent 配置门禁', passed: false, status: 'error', error: e2.message };
       }
       try {
         return {
@@ -203,8 +222,15 @@
       }
     }
     if (levelId === 'w7_7') {
-      if (typeof WfSim === 'undefined' || !WfSim || !WfSim.state) {
-        return { label: '无门禁（普通关卡）', passed: null, status: 'n/a' };
+      if (typeof WfSim === 'undefined' || !WfSim) {
+        var e3 = new Error('WfSim 门禁对象不存在');
+        Round3Diagnostics.record('readGate:w7_7', e3);
+        return { label: 'W7 · 工作流门禁', passed: false, status: 'error', error: e3.message };
+      }
+      if (!WfSim.state) {
+        var e4 = new Error('WfSim.state 门禁状态不存在');
+        Round3Diagnostics.record('readGate:w7_7', e4);
+        return { label: 'W7 · 工作流门禁', passed: false, status: 'error', error: e4.message };
       }
       try {
         return {
@@ -225,6 +251,13 @@
     if (st) st.gate = readGate(levelId);
   };
 
+  // 当前步骤标签: 全部完成显示「已完成」, 否则显示「(当前步+1) / 总步」, 杜绝分子大于分母(如 5/4)
+  InteractionProgress.currentLabel = function (st) {
+    if (!st || !st.total) return '—';
+    if (st.completedCount === st.total) return '已完成';
+    return (st.current + 1) + ' / ' + st.total;
+  };
+
   // render: 返回面板「内部」HTML（不含 #r3-iprog 外层包裹，由 injectProgress 包裹）
   InteractionProgress.render = function (levelId) {
     var st = this._state[levelId];
@@ -237,7 +270,7 @@
       return '<li class="r3-ip-step ' + cls + '">' + mark + ' ' + esc(s.label) + '</li>';
     }).join('');
     return '<div class="r3-ip-head">📊 交互进度</div>' +
-      '<div class="r3-ip-row">当前步骤：' + (st.total ? (st.current + 1) + ' / ' + st.total : '—') + '</div>' +
+      '<div class="r3-ip-row">当前步骤：' + esc(this.currentLabel(st)) + '</div>' +
       '<div class="r3-ip-row">已完成 / 总步骤：' + st.completedCount + ' / ' + st.total + '</div>' +
       '<ul class="r3-ip-steps">' + lis + '</ul>' +
       '<div class="r3-ip-row">当前门禁：' + esc(gateTxt) + '</div>' +
@@ -604,8 +637,9 @@
       try {
         if (isR3) {
           if (this._completing) {
-            // 成功：将剩余步骤标记完成，清除该关错误反馈（不重置已完成的步骤）
+            // 成功：将剩余步骤标记完成，清除旧失败原因与错误反馈（不重置已完成的步骤）
             (rep.interactionSteps || []).forEach(function (s) { InteractionProgress.complete(id, s.id); });
+            InteractionProgress.clearFailure(id);
             InteractionProgress._refreshGate(id);
             ErrorFeedback.clear(id);
           } else {

@@ -36,12 +36,41 @@ def main():
         if '无门禁' in body:
             problems.append('catch 块降级为"无门禁": ' + body.strip()[:100])
 
-    # 3) 禁止"门禁失败兜底为无门禁"的确切形态
-    if "catch (e) { return { label: '无门禁" in src or \
-       "catch(e){return{label:'无门禁" in src or \
-       "return { label: '无门禁（普通关卡）', passed: null }" in src:
-        # 仅当该 return 出现在 catch 内才违规; 上面已通过 catch 体扫描保证, 此处再兜底
-        pass
+    # 3) W6/W7 门禁缺失分支不得降级为"无门禁"/passed:null (fail-closed 守门)
+    #    提取 readGate 函数体, 统计其中"无门禁（普通关卡）"/"passed: null"出现次数:
+    #    合法的末尾兜底(用于非门禁关卡)只应出现 1 次; 若 >1 说明 W6/W7 缺失分支仍降级。
+    rg = src.find('function readGate(levelId)')
+    if rg < 0:
+        problems.append('未找到 readGate 函数')
+    else:
+        ob = src.find('{', rg)
+        depth = 0
+        end = ob
+        for i in range(ob, len(src)):
+            if src[i] == '{':
+                depth += 1
+            elif src[i] == '}':
+                depth -= 1
+                if depth == 0:
+                    end = i
+                    break
+        body = src[ob:end + 1]
+        if body.count("无门禁（普通关卡）") > 1:
+            problems.append('W6/W7 门禁缺失时仍降级为无门禁')
+        if body.count('passed: null') > 1:
+            problems.append('W6/W7 门禁缺失分支仍为 passed: null')
+        # 6 个门禁缺失处理模式必须覆盖 (门禁对象不存在 / 状态不存在, W6 与 W7 各一对)
+        required = [
+            "typeof Sim === 'undefined'",
+            "!Sim",
+            "!Sim.state",
+            "typeof WfSim === 'undefined'",
+            "!WfSim",
+            "!WfSim.state",
+        ]
+        for p in required:
+            if p not in body:
+                problems.append('readGate 缺少门禁缺失处理分支: ' + p)
 
     # 4) Round3Diagnostics 定义且暴露
     if 'var Round3Diagnostics' not in src:
@@ -49,8 +78,9 @@ def main():
     if 'window.Round3Diagnostics = Round3Diagnostics' not in src:
         problems.append('未暴露 window.Round3Diagnostics')
 
-    # 5) InteractionProgress 必须含 sync / updatePanel / ensure
-    for m in ['sync = function', 'updatePanel = function', 'ensure = function']:
+    # 5) InteractionProgress 必须含 sync / updatePanel / ensure / currentLabel / clearFailure
+    for m in ['sync = function', 'updatePanel = function', 'ensure = function',
+              'currentLabel = function', 'clearFailure = function']:
         if m not in src:
             problems.append('InteractionProgress 缺少方法: ' + m)
 
@@ -59,7 +89,8 @@ def main():
             print('[FAIL]', p)
         sys.exit(1)
     print('OK: round3_features.js 无空 catch; 所有 catch 记录诊断且未降级为无门禁; '
-          'Round3Diagnostics 已定义并暴露; InteractionProgress 含 sync/updatePanel/ensure')
+          'Round3Diagnostics 已定义并暴露; InteractionProgress 含 sync/updatePanel/ensure/'
+          'currentLabel/clearFailure; readGate 门禁缺失分支 fail-closed')
     sys.exit(0)
 
 

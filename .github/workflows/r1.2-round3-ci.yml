@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: "20"
 
-      - name: "3) JS 语法检查 (round3_features.js + 6 个 Round3 新增测试)"
+      - name: "3) JS 语法检查 (round3_features.js + 8 个 Round3 新增测试)"
         run: |
           node --check round3_features.js
           node --check tests/test_round3_interaction_progress.js
@@ -42,6 +42,8 @@ jobs:
           node --check tests/test_round3_live_progress.js
           node --check tests/test_round3_gate_fail_closed.js
           node --check tests/test_round3_no_answer_leak.js
+          node --check tests/test_round3_gate_missing_state.js
+          node --check tests/test_round3_completion_state.js
 
       - name: "4) 生成确定性 fixtures (无真实素材, 可清理)"
         run: |
@@ -73,7 +75,7 @@ jobs:
 
       - name: "9) Round3 新增测试全部通过"
         if: always()
-        run: grep -E "Round3 相关 11 步.*全部通过" tests/logs/r1.2-round3-ci.log
+        run: grep -E "Round3 相关 13 步.*全部通过" tests/logs/r1.2-round3-ci.log
 
       - name: "10) pageerror = 0 且 requestfailed = 0"
         if: always()
@@ -99,4 +101,4 @@ jobs:
         run: |
           echo "CI_CONFIG_READY"
           echo "说明: 分支 r1.2-round3-dev 未推送, 工作流未在 CI 实际运行;"
-          echo "      本地 38 项全量测试已通过(见 step 8-10), 守门检查清单已就绪。"
+          echo "      本地 40 项全量测试已通过(见 step 8-10), 守门检查清单已就绪。"
