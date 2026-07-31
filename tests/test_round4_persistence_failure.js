@@ -7,7 +7,8 @@
 //     2. State.save 抛错 (写入异常): 捕获后回滚 → status === 'rolled_back'
 //     3. State.save 返回 false (保存被拒): _commitCompletion 视为失败 → 回滚 → 'rolled_back'
 //     4. 序列化失败 (State.save 抛序列化错误): 等同于写入异常 → 回滚 → 'rolled_back'
-//     5. 写后读不一致 (getItem 被篡改, 重读与内存不符): commit 重读校验失败 → 回滚 → 'rolled_back'
+//     5. 写后读不一致 (getItem 被篡改, 重读与内存不符): commit 重读校验失败 → 持久化回滚失败 → 'rollback_persist_failed'
+//        (§三: 写后重读验证不一致时 status=rollback_persist_failed, 不得报告 persistenceRestored=true / status=rolled_back)
 //
 //   每个用例断言: Level.done 不向调用方抛异常 (内部已捕获并回滚); completed === false;
 //     commitPointReached === false; Level._completing === false; xp 无增量。
@@ -167,8 +168,8 @@ const NEXT = 'ai_camp_2';
       rep.assert(c.commitPointReached === false, `${c.name}: 提交点未达成 (${c.commitPointReached})`);
       rep.assert(c.xpDelta === 0, `${c.name}: 回滚后 xp 无增量 (${c.xpDelta})`);
       rep.assert(c.completing === false, `${c.name}: 提交锁已恢复 (${c.completing})`);
-      if (c.name === 'setItem_throws(quota)') {
-        rep.assert(c.status === 'rollback_persist_failed', `${c.name}: 双写失败 → status === 'rollback_persist_failed' (${c.status})`);
+      if (c.name === 'setItem_throws(quota)' || c.name === 'write_then_read_mismatch') {
+        rep.assert(c.status === 'rollback_persist_failed', `${c.name}: 写后重读不一致 → status === 'rollback_persist_failed' (${c.status})`);
       } else {
         rep.assert(c.status === 'rolled_back', `${c.name}: 回滚 → status === 'rolled_back' (${c.status})`);
       }

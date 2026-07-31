@@ -140,6 +140,47 @@ def main():
     rep.assert_(".completed = true" not in src, "12a. 编排器不含任何 completed = true 赋值 (completed 仅由 _commitCompletion 权威写入)")
     rep.assert_("State.levels[id].completed === true" in src, "12b. 保留幂等守卫: 已完成关再次调用直接返回 true, 不伪造提交")
 
+    # 14) §一 finish() 不得覆盖 post_commit_error 粘性终态
+    rep.assert_("if (st.status === 'post_commit_error') {" in src,
+                "14a. finish() 含 post_commit_error 粘性守卫(不覆盖已提交但失败的事实)")
+    rep.assert_("st.phase = 'post_commit_error';" in src,
+                "14b. 粘性分支将 phase 保持为 post_commit_error (不得回退到 committed/rendering)")
+
+    # 15) §二 rollback 最后一步执行内存深比较验证(而非"执行过即成功")
+    rep.assert_("memoryOk = verifyMemoryAgainstSnapshot(levelId, snap);" in src,
+                "15. rollback 最后执行 verifyMemoryAgainstSnapshot 递归深比较完整内存状态")
+
+    # 16) §三 rollback 最后一步执行持久化写后重读验证
+    rep.assert_("var persistOk = verifyPersistenceRestored(snap);" in src,
+                "16. rollback 执行 verifyPersistenceRestored (写后重读 localStorage 校验一致性)")
+
+    # 17) §二 memoryRestored 主恢复路径不得提前置 true(只能由深比较结果 memoryOk 决定)
+    #     注: 无快照早返回(!st.snapshot) 属"无可恢复内容"的平凡成功, 允许 memoryRestored=true,
+    #         但其位置必须早于主路径的 `= memoryOk` 赋值(即在早返回分支内, 而非恢复中途)。
+    i_mem_true = src.find("result.memoryRestored = true")
+    i_mem_ok = src.find("result.memoryRestored = memoryOk;")
+    rep.assert_(i_mem_true >= 0 and i_mem_ok > i_mem_true,
+                "17. memoryRestored=true 仅出现在无快照早返回(主恢复路径由 memoryOk 决定, 索引 %d < %d)" % (i_mem_true, i_mem_ok))
+
+    # 18) §三 persistenceRestored 主恢复路径不得仅因 setItem 无异常就置 true(只能由重读校验 persistOk 决定)
+    i_per_true = src.find("result.persistenceRestored = true")
+    i_per_ok = src.find("result.persistenceRestored = persistOk;")
+    rep.assert_(i_per_true >= 0 and i_per_ok > i_per_true,
+                "18. persistenceRestored=true 仅出现在无快照早返回(主恢复路径由 persistOk 决定, 索引 %d < %d)" % (i_per_true, i_per_ok))
+
+    # 19) §五 nextCoreOf catch 必须 record + throw(不得静默吞异常)
+    rep.assert_("R3D.record('CompletionTransaction.nextCoreOf', e);" in src,
+                "19a. nextCoreOf catch 记录 diagnostics (CompletionTransaction.nextCoreOf)")
+    i_nc = src.find("R3D.record('CompletionTransaction.nextCoreOf', e);")
+    rep.assert_(i_nc >= 0 and src[i_nc:i_nc + 80].find("throw e;") >= 0,
+                "19b. nextCoreOf catch 紧接着 throw e (上抛, 不静默返回 null)")
+
+    # 20) §六 getState 返回 rollbackVerification(不可变证据); 深拷贝防止外部污染
+    rep.assert_("rollbackVerification: st.rollbackVerification" in src,
+                "20a. getState 返回 rollbackVerification 哈希证据")
+    rep.assert_("return deepClone({" in src,
+                "20b. getState 返回深拷贝(外部修改不得污染内部事务状态)")
+
     # 13) 构建产物包含注入标记 (源码→构建 关联)
     if html:
         rep.assert_("window.CompletionTransaction = CompletionTransaction" in html,
