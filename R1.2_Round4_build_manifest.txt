@@ -1,0 +1,5 @@
+round3_input_sha256: ec4f199f98d10b263ea58ec8f4140eadc3472d94f60957a505440fedc675b014
+round4_output_sha256: 328f514becd4a71252dfb2c55c9868d80ad011666e9f09cd030eae0bd92ccc0c
+injection_position: 455055
+fixture_manifest_sha256: 8c4e3d65e06e21fe7a2af7d1a7f33ca27081f0b4b8bcbfe53608fe3274b5a64e
+output_file: Agent新手村_R1.2-round4-p0.html
