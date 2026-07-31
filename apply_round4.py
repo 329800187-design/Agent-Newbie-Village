@@ -84,13 +84,13 @@ REFACTOR_BLOCK = """  _r4fire: function (p) { if (typeof CompletionTransactionFa
     this._r4fire('after_next_unlock');
     if (typeof _refreshUnlockedFlags === 'function') _refreshUnlockedFlags();
     var rc = false; if (lvl.achievement && State.achievements.indexOf(lvl.achievement) < 0) { State.achievements.push(lvl.achievement); rc = true; }
-    if (id === 'w6_9' && typeof Sim !== 'undefined') { Sim.clearDraft(); }
-    if (id === 'w7_7' && typeof WfSim !== 'undefined') { WfSim.clearDraft(); }
-    LearningLog.log('level_complete', id, '', 1, false, true);
+    // 阶段 B 仅做权威内存写入 + State.save + 提交钩子；完成侧作用（clearDraft /
+    // learningLog / artifact / starBurst）已统一移至 completion_transaction.js 的
+    // runPostCommitSideEffects，仅在 commitPointReached 之后执行，故此处不再执行，
+    // 以避免「阶段 B 回滚后侧作用仍残留」的缺陷。
     var _payload = { decisions: JSON.parse(JSON.stringify(Level.builderState || {})), testResults: {} };
     if (id === 'w6_9' && typeof Sim !== 'undefined' && Sim.state) { _payload.testResults = { scenarioResults: JSON.parse(JSON.stringify(Sim.state.passed || {})), configSnapshot: JSON.parse(JSON.stringify(Sim.state.configSnapshot || {})), revision: Sim.state.configRevision || 0, finalPassedAt: Sim.state.finalPassedAt || null }; }
     if (id === 'w7_7' && typeof WfSim !== 'undefined' && WfSim.state) { _payload.testResults = { scenarioResults: JSON.parse(JSON.stringify(WfSim.state.passed || {})), configSnapshot: JSON.parse(JSON.stringify(WfSim.state.configSnapshot || {})), revision: WfSim.state.configRevision || 0, finalPassedAt: WfSim.state.finalPassedAt || null }; }
-    Artifact.saveLevel(id, _payload);
     this._r4fire('before_save');
     try {
       var _sv = State.save();
@@ -100,9 +100,9 @@ REFACTOR_BLOCK = """  _r4fire: function (p) { if (typeof CompletionTransactionFa
       throw e;
     }
     this._r4fire('after_save');
-    Game.starBurst();
     this._completing = false;
-    return { id: id, lvl: lvl, _isCore: _isCore, _nextCore: _nextCore, _first: _first, stars: stars, _old: _old };
+    // 返回 meta（含 _payload 供提交点之后 runPostCommitSideEffects 使用）；不在此执行侧作用。
+    return { id: id, lvl: lvl, _isCore: _isCore, _nextCore: _nextCore, _first: _first, stars: stars, _old: _old, _payload: _payload };
   },
   _showCompletion: function (meta) {
     if (!meta) return;

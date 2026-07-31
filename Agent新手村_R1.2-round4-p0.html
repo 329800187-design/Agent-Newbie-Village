@@ -1,4 +1,4 @@
-<!-- Round4-P0 build: input=ec4f199f98d10b263ea58ec8f4140eadc3472d94f60957a505440fedc675b014; injectionPos=455055; fixtures=8c4e3d65e06e21fe7a2af7d1a7f33ca27081f0b4b8bcbfe53608fe3274b5a64e -->
+<!-- Round4-P0 build: input=ec4f199f98d10b263ea58ec8f4140eadc3472d94f60957a505440fedc675b014; injectionPos=455105; fixtures=8c4e3d65e06e21fe7a2af7d1a7f33ca27081f0b4b8bcbfe53608fe3274b5a64e -->
 <!-- Round3 build: input=66eefd65e7908efbf4c42805e94550b143aebe0aa3c91da4b845270a50491ac6; injectionPos=420375; fixtures=8c4e3d65e06e21fe7a2af7d1a7f33ca27081f0b4b8bcbfe53608fe3274b5a64e -->
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -2222,13 +2222,13 @@ builderCheck(si){this.builderCheckSi=si;
     this._r4fire('after_next_unlock');
     if (typeof _refreshUnlockedFlags === 'function') _refreshUnlockedFlags();
     var rc = false; if (lvl.achievement && State.achievements.indexOf(lvl.achievement) < 0) { State.achievements.push(lvl.achievement); rc = true; }
-    if (id === 'w6_9' && typeof Sim !== 'undefined') { Sim.clearDraft(); }
-    if (id === 'w7_7' && typeof WfSim !== 'undefined') { WfSim.clearDraft(); }
-    LearningLog.log('level_complete', id, '', 1, false, true);
+    // 阶段 B 仅做权威内存写入 + State.save + 提交钩子；完成侧作用（clearDraft /
+    // learningLog / artifact / starBurst）已统一移至 completion_transaction.js 的
+    // runPostCommitSideEffects，仅在 commitPointReached 之后执行，故此处不再执行，
+    // 以避免「阶段 B 回滚后侧作用仍残留」的缺陷。
     var _payload = { decisions: JSON.parse(JSON.stringify(Level.builderState || {})), testResults: {} };
     if (id === 'w6_9' && typeof Sim !== 'undefined' && Sim.state) { _payload.testResults = { scenarioResults: JSON.parse(JSON.stringify(Sim.state.passed || {})), configSnapshot: JSON.parse(JSON.stringify(Sim.state.configSnapshot || {})), revision: Sim.state.configRevision || 0, finalPassedAt: Sim.state.finalPassedAt || null }; }
     if (id === 'w7_7' && typeof WfSim !== 'undefined' && WfSim.state) { _payload.testResults = { scenarioResults: JSON.parse(JSON.stringify(WfSim.state.passed || {})), configSnapshot: JSON.parse(JSON.stringify(WfSim.state.configSnapshot || {})), revision: WfSim.state.configRevision || 0, finalPassedAt: WfSim.state.finalPassedAt || null }; }
-    Artifact.saveLevel(id, _payload);
     this._r4fire('before_save');
     try {
       var _sv = State.save();
@@ -2238,9 +2238,9 @@ builderCheck(si){this.builderCheckSi=si;
       throw e;
     }
     this._r4fire('after_save');
-    Game.starBurst();
     this._completing = false;
-    return { id: id, lvl: lvl, _isCore: _isCore, _nextCore: _nextCore, _first: _first, stars: stars, _old: _old };
+    // 返回 meta（含 _payload 供提交点之后 runPostCommitSideEffects 使用）；不在此执行侧作用。
+    return { id: id, lvl: lvl, _isCore: _isCore, _nextCore: _nextCore, _first: _first, stars: stars, _old: _old, _payload: _payload };
   },
   _showCompletion: function (meta) {
     if (!meta) return;
@@ -4685,6 +4685,56 @@ Game.init();window.Game=Game;
   }
 
   /* ------------------------------------------------------------------
+   * 递归深比较（提交点重读一致性校验；覆盖 directive §一 全部持久化字段）
+   *   - 以期望对象 a 的键为准；a 中值为 undefined 的键视为非必填（与 JSON 序列化一致）
+   *   - actual 含 a 没有的键 → 不一致（如被删除的关卡记录）
+   * ------------------------------------------------------------------ */
+  function deepEqual(a, b) {
+    if (a === b) return true;
+    if (a === null || b === null) return a === b;
+    var ta = typeof a, tb = typeof b;
+    if (ta !== tb) return false;
+    if (ta === 'number' && isNaN(a) && isNaN(b)) return true;
+    if (ta === 'object') {
+      if (a instanceof Array) {
+        if (!(b instanceof Array) || a.length !== b.length) return false;
+        for (var i = 0; i < a.length; i++) if (!deepEqual(a[i], b[i])) return false;
+        return true;
+      }
+      var ka = Object.keys(a), kb = Object.keys(b);
+      for (var k = 0; k < ka.length; k++) {
+        var key = ka[k];
+        if (a[key] === undefined) continue; // JSON 序列化会丢弃 undefined，不要求 actual 含该键
+        if (!deepEqual(a[key], b[key])) return false;
+      }
+      for (var j = 0; j < kb.length; j++) {
+        if (ka.indexOf(kb[j]) < 0) return false; // actual 多出的键 → 不一致
+      }
+      return true;
+    }
+    return false;
+  }
+
+  /* ------------------------------------------------------------------
+   * 根据 State.save() 的真实结构生成规范化期望对象
+   *   schemaVersion / currentLevel / levels(全部) / xp / totalStars /
+   *   achievements / peipeiFound / learnerProfile
+   * ------------------------------------------------------------------ */
+  function buildExpectedPersistedState() {
+    var sv = (typeof SCHEMA_VERSION !== 'undefined') ? SCHEMA_VERSION : 3;
+    return {
+      schemaVersion: sv,
+      currentLevel: State.currentLevel,
+      levels: deepClone(State.levels),
+      xp: State.xp,
+      totalStars: State.totalStars,
+      achievements: deepClone(State.achievements),
+      peipeiFound: State.peipeiFound,
+      learnerProfile: deepClone(State.learnerProfile)
+    };
+  }
+
+  /* ------------------------------------------------------------------
    * 计算下一核心关（用于快照确定受影响字段）
    * ------------------------------------------------------------------ */
   function nextCoreOf(levelId) {
@@ -4734,6 +4784,8 @@ Game.init();window.Game=Game;
       var snap;
       try {
         var next = nextCoreOf(levelId);
+        var lsExists = (typeof localStorage !== 'undefined');
+        var rawSave = lsExists ? localStorage.getItem('agent_village_d') : null;
         snap = {
           currentLevelState: deepClone(State.levels[levelId]),
           affectedNextLevelState: (next && State.levels[next]) ? deepClone(State.levels[next]) : null,
@@ -4743,9 +4795,8 @@ Game.init();window.Game=Game;
             xp: State.xp,
             achievements: State.achievements.slice()
           },
-          persistedSave: (typeof localStorage !== 'undefined')
-            ? localStorage.getItem('agent_village_d')
-            : null
+          persistedSave: rawSave,
+          persistedSaveExists: rawSave !== null
         };
       } catch (e) {
         // 不可序列化值 → 明确失败并阻止提交
@@ -4770,25 +4821,17 @@ Game.init();window.Game=Game;
       var persisted = (typeof localStorage !== 'undefined') ? localStorage.getItem('agent_village_d') : null;
       if (!persisted) { this.rollback(levelId, new Error('commit: 持久化内容缺失')); return false; }
 
-      // 2) 重读一致性（内存 ↔ 持久化）
-      var d;
-      try { d = JSON.parse(persisted); } catch (e) { this.rollback(levelId, new Error('commit: 持久化解析失败')); return false; }
-      if (!d || !d.levels || !d.levels[levelId]) { this.rollback(levelId, new Error('commit: 重读 levels 缺失')); return false; }
-      if (d.levels[levelId].completed !== State.levels[levelId].completed) {
-        this.rollback(levelId, new Error('commit: 重读 completed 不一致')); return false;
-      }
-      if (d.currentLevel !== State.currentLevel) {
-        this.rollback(levelId, new Error('commit: 重读 currentLevel 不一致')); return false;
-      }
-      if (d.totalStars !== State.totalStars || d.xp !== State.xp) {
-        this.rollback(levelId, new Error('commit: 重读 统计不一致')); return false;
-      }
-      var next = nextCoreOf(levelId);
-      if (next && d.levels[next] && d.levels[next].unlocked !== State.levels[next].unlocked) {
-        this.rollback(levelId, new Error('commit: 重读 下一关 unlocked 不一致')); return false;
-      }
-      if (JSON.stringify(d.achievements || []) !== JSON.stringify(State.achievements)) {
-        this.rollback(levelId, new Error('commit: 重读 achievements 不一致')); return false;
+      // 2) 重读一致性（内存权威状态 ↔ 持久化，递归深比较完整结构）
+      var actual;
+      try { actual = JSON.parse(persisted); } catch (e) { this.rollback(levelId, new Error('commit: 持久化解析失败')); return false; }
+      var expected;
+      try { expected = buildExpectedPersistedState(); }
+      catch (e) { this.rollback(levelId, new Error('commit: 期望状态构造失败: ' + (e && e.message || e))); return false; }
+      if (!deepEqual(actual, expected)) {
+        // 任一字段缺失或不一致（当前关 completed/stars/其它、下一关记录存在性或 unlocked、
+        // 全部 levels 记录、currentLevel/xp/totalStars/achievements/peipeiFound/learnerProfile/schemaVersion）
+        this.rollback(levelId, new Error('commit: 重读持久化与内存权威状态不一致（完整结构深比较失败）'));
+        return false;
       }
 
       // 3) 唯一成功提交点
@@ -4801,60 +4844,94 @@ Game.init();window.Game=Game;
 
     rollback: function (levelId, error) {
       var st = states[levelId];
-      if (!st) { R3D.record('CompletionTransaction.rollback', error); return; }
+      var result = { memoryRestored: false, persistenceRestored: false, derivedStateRefreshed: false, success: false };
+      if (!st) {
+        R3D.record('CompletionTransaction.rollback', error);
+        return result;
+      }
       if (!st.snapshot) {
         st.phase = 'rolled_back';
         st.status = 'rolled_back';
         st.rollbackReason = String(error && error.message || error);
         st.rolledBackAt = Date.now();
         R3D.record('CompletionTransaction.rollback', error);
-        return;
+        result.memoryRestored = true; result.persistenceRestored = true; result.derivedStateRefreshed = true; result.success = true;
+        return result;
       }
 
       var snap = st.snapshot;
-      var restored = {};
+      // 内存恢复
       try {
         if (snap.currentLevelState) {
           State.levels[levelId] = deepClone(snap.currentLevelState);
-          restored.currentLevelState = true;
+          result.memoryRestored = true;
         }
         var next = nextCoreOf(levelId);
         if (snap.affectedNextLevelState && next && State.levels[next]) {
           State.levels[next] = deepClone(snap.affectedNextLevelState);
-          restored.affectedNextLevelState = true;
+          result.memoryRestored = true;
         }
         if (snap.affectedGlobalFields) {
           State.currentLevel = snap.affectedGlobalFields.currentLevel;
           State.totalStars = snap.affectedGlobalFields.totalStars;
           State.xp = snap.affectedGlobalFields.xp;
           State.achievements = snap.affectedGlobalFields.achievements.slice();
-          restored.affectedGlobalFields = true;
+          result.memoryRestored = true;
         }
-        // 持久化回滚（重写旧存档字符串）
-        if (typeof localStorage !== 'undefined' && snap.persistedSave !== undefined) {
-          try {
+      } catch (e) { R3D.record('CompletionTransaction.rollback.memory', e); }
+
+      // 持久化恢复（精确恢复“存档不存在”）
+      try {
+        if (typeof localStorage !== 'undefined') {
+          if (snap.persistedSaveExists) {
             localStorage.setItem('agent_village_d', snap.persistedSave);
-          } catch (e2) {
-            st.status = 'rollback_persist_failed';
-            st.phase = 'rolled_back';
-            st.rollbackReason = String(error && error.message || error);
-            st.restoredFields = restored;
-            st.rolledBackAt = Date.now();
-            R3D.record('CompletionTransaction.rollback.persist', e2);
-            return; // 双重持久化失败：禁止继续提交，提示重载
+          } else {
+            // 故障前不存在 → 故障后仍不存在（绝不写入字符串 "null"）
+            localStorage.removeItem('agent_village_d');
           }
         }
-        if (typeof _refreshUnlockedFlags === 'function') _refreshUnlockedFlags();
-      } catch (e) {
-        R3D.record('CompletionTransaction.rollback', e);
-      }
+        result.persistenceRestored = true;
+      } catch (e2) { R3D.record('CompletionTransaction.rollback.persist', e2); }
 
-      st.restoredFields = restored;
+      // 派生状态刷新
+      try {
+        if (typeof _refreshUnlockedFlags === 'function') _refreshUnlockedFlags();
+        result.derivedStateRefreshed = true;
+      } catch (e3) { R3D.record('CompletionTransaction.rollback.derived', e3); }
+
+      // 终态判定：内存/持久化/派生任一失败 → 不得标记普通 rolled_back
+      if (result.memoryRestored && result.persistenceRestored && result.derivedStateRefreshed) {
+        st.status = 'rolled_back';
+      } else if (!result.persistenceRestored) {
+        st.status = 'rollback_persist_failed';
+      } else {
+        st.status = 'rollback_failed';
+      }
       st.phase = 'rolled_back';
-      st.status = (st.status === 'rollback_persist_failed') ? 'rollback_persist_failed' : 'rolled_back';
+      st.rollbackReason = String(error && error.message || error);
+      st.restoredFields = { memory: result.memoryRestored, persistence: result.persistenceRestored, derived: result.derivedStateRefreshed };
+      st.rolledBackAt = Date.now();
+      result.success = result.memoryRestored && result.persistenceRestored && result.derivedStateRefreshed;
+      if (!result.success) {
+        // 提示用户重新加载
+        if (typeof Game !== 'undefined' && Game && Game.toast) {
+          try { Game.toast('提交回滚失败，请重新加载页面以恢复存档'); }
+          catch (e) { R3D.record('CompletionTransaction.rollback.toast_fail', e); }
+        }
+      }
+      R3D.record('CompletionTransaction.rollback', error);
+      return result;
+    },
+
+    abortBeforeMutation: function (levelId, error) {
+      // 快照阶段（事务开始 → 提交前）失败的统一终态：明确失败，不残留 validating/idle
+      var st = states[levelId] || (states[levelId] = blankState(levelId));
+      st.phase = 'mutating';
+      st.status = 'preflight_failed';
       st.rollbackReason = String(error && error.message || error);
       st.rolledBackAt = Date.now();
-      R3D.record('CompletionTransaction.rollback', error);
+      R3D.record('CompletionTransaction.abortBeforeMutation', error);
+      return false;
     },
 
     finish: function (levelId) {
@@ -4914,7 +4991,11 @@ Game.init();window.Game=Game;
     _armed: {},
     arm: function (point, opts) {
       var o = { mode: 'throw', once: true, fired: false };
-      if (opts) { if (opts.mode) o.mode = opts.mode; if (opts.once !== undefined) o.once = opts.once; }
+      if (opts) {
+        if (opts.mode) o.mode = opts.mode;
+        if (opts.once !== undefined) o.once = opts.once;
+        if (typeof opts.patch === 'function') o.patch = opts.patch;
+      }
       this._armed[point] = o;
       // during_save：直接 patch State.save 抛错（最贴近“保存中异常”）
       if (point === 'during_save' && typeof State !== 'undefined' && typeof State.save === 'function') {
@@ -4935,9 +5016,19 @@ Game.init();window.Game=Game;
       f.fired = true;
       if (f.mode === 'throw') throw new Error('CompletionTransactionFaults: injected at ' + point);
       if (f.mode === 'corrupt') {
-        // after_save：保存成功后故意破坏持久化，使重读不一致 → 触发回滚
+        // after_save：保存成功后破坏持久化，使重读不一致 → 触发回滚
         try {
-          if (typeof localStorage !== 'undefined') localStorage.setItem('agent_village_d', '{"corrupted":true,"levels":{}}');
+          if (typeof localStorage !== 'undefined') {
+            if (typeof f.patch === 'function') {
+              // 定向破坏：读取当前持久化 → 应用 patch（注入特定字段不一致/缺失）→ 写回
+              var cur = localStorage.getItem('agent_village_d');
+              var obj = cur ? JSON.parse(cur) : {};
+              f.patch(obj);
+              localStorage.setItem('agent_village_d', JSON.stringify(obj));
+            } else {
+              localStorage.setItem('agent_village_d', '{"corrupted":true,"levels":{}}');
+            }
+          }
         } catch (e) { R3D.record('CompletionTransactionFaults.corrupt', e); }
       }
     },
@@ -4947,6 +5038,43 @@ Game.init();window.Game=Game;
       cleanupList = [];
     }
   };
+
+  /* ------------------------------------------------------------------
+   * 提交点之后的完成侧作用（独立于展示；任一失败不回滚主事务，继续其它）
+   *   - clearDraft / learningLog / artifact / starBurst 均不得在阶段 B 内执行
+   *   - 阶段 B 回滚后绝不会运行到这里（侧作用只在 commitPointReached 之后）
+   * ------------------------------------------------------------------ */
+  function safePostCommit(levelId, scope, fn) {
+    try {
+      fn();
+    } catch (e) {
+      // 单项失败：不回滚已提交事务，仅标记 post_commit_error 并继续其它相互独立动作
+      var st = states[levelId];
+      if (st) { st.status = 'post_commit_error'; st.phase = 'rendering'; }
+      R3D.record('CompletionTransaction.post_commit.' + scope, e);
+    }
+  }
+  function runPostCommitSideEffects(levelId, meta) {
+    if (!meta) return;
+    var id = levelId;
+    // 清理 W6/W7 草稿（仅对应关卡）
+    safePostCommit(id, 'clearDraft', function () {
+      if (id === 'w6_9' && typeof Sim !== 'undefined' && Sim && Sim.clearDraft) Sim.clearDraft();
+      if (id === 'w7_7' && typeof WfSim !== 'undefined' && WfSim && WfSim.clearDraft) WfSim.clearDraft();
+    });
+    // 学习日志（level_complete）
+    safePostCommit(id, 'learningLog', function () {
+      if (typeof LearningLog !== 'undefined' && LearningLog && LearningLog.log) LearningLog.log('level_complete', id, '', 1, false, true);
+    });
+    // 通关产物
+    safePostCommit(id, 'artifact', function () {
+      if (typeof Artifact !== 'undefined' && Artifact && Artifact.saveLevel && meta._payload) Artifact.saveLevel(id, meta._payload);
+    });
+    // 视觉特效
+    safePostCommit(id, 'starBurst', function () {
+      if (typeof Game !== 'undefined' && Game && Game.starBurst) Game.starBurst();
+    });
+  }
 
   /* ------------------------------------------------------------------
    * Level.done 重编排（Round3 fail-closed 门禁完整保留；阶段 B/C 分离）
@@ -4988,11 +5116,18 @@ Game.init();window.Game=Game;
         return true;
       }
 
-      // ── 事务开始 + 提交前快照（阶段 A→B 边界）──
-      CompletionTransaction.begin(id);
-      Faults.fire('before_snapshot');
-      var snap = CompletionTransaction.snapshot(id);
-      Faults.fire('after_snapshot');
+      // ── 事务开始 + 提交前快照（阶段 A→B 边界；统一捕获，失败进入 preflight_failed 终态）──
+      var snap;
+      try {
+        CompletionTransaction.begin(id);
+        Faults.fire('before_snapshot');
+        snap = CompletionTransaction.snapshot(id);
+        Faults.fire('after_snapshot');
+      } catch (e) {
+        CompletionTransaction.abortBeforeMutation(id, e);
+        this._completing = false;
+        return false;
+      }
       if (!snap) {
         this._completing = false;
         return false;
@@ -5025,10 +5160,14 @@ Game.init();window.Game=Game;
         this._completing = false;
       }
 
-      // ── 阶段 C：提交点之后（展示 + 后续处理）。异常不回滚，仅标记 post_commit_error ──
+      // ── 阶段 C：提交点之后（提交点 = 不可回退边界）。异常不回滚，仅标记 post_commit_error ──
       // 提交点之后已是"已提交事务"，任何故障都不得撤销已完成事实。
       try {
         Faults.fire('after_commit_point');
+        // ── 完成侧作用（独立于展示，提交点之后执行；任一失败不回滚主事务）──
+        // runPostCommitSideEffects 内部每个动作已各自 safePostCommit 捕获, 本身不抛;
+        // 若意外抛错则交由本阶段外层 catch 标记 post_commit_error, 仍不回滚已提交事务。
+        runPostCommitSideEffects(id, meta);
         // ── 阶段 C：展示（异常不回滚）──
         try { _show(meta); }
         catch (e) { CompletionTransaction.markPostCommitError(id, e); }
