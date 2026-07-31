@@ -13,6 +13,8 @@
     28-29 Round3 派生构建(夹具生成 + apply_round3.py)
     30-31 Round3 新增 Python 测试(2 项: 可复现构建 / 课程不变量)
     32-40 Round3 新增 Node 测试(9 项: 交互进度 / 错误反馈 / 9 关接入 / 实时进度 / 门禁 fail-closed / 答案不泄露 / 门禁缺失 / 完成态一致性 / 引擎真实提交门禁)
+    42-48 Round4-P0 派生构建 + 5 新增 Node 测试 + 1 静态扫描
+    49-52 Round4-P0-R1 精准修复新增 Node 测试(完整持久化校验 / 存档缺失还原 / 侧作用原子性 / 快照阶段捕获)
 
 每项输出 [PASS]/[FAIL] + 退出码; 失败附最后 50 行日志。
 任何一项失败 → 本脚本退出码非 0; 全部成功 → 打印 ALL TESTS PASS。
@@ -319,6 +321,23 @@ def main():
     log("\n── Round4-P0 静态扫描 ──")
     run_step("48. test_round4_transaction_static.py", [py, "tests/test_round4_transaction_static.py"])
 
+    # ── 49-52 Round4-P0-R1 精准修复新增测试(需 Chromium) ──
+    round4_r1_tests = [
+        ("49. test_round4_full_persisted_state.js", "tests/test_round4_full_persisted_state.js"),
+        ("50. test_round4_absent_save_restore.js", "tests/test_round4_absent_save_restore.js"),
+        ("51. test_round4_side_effect_atomicity.js", "tests/test_round4_side_effect_atomicity.js"),
+        ("52. test_round4_snapshot_failure.js", "tests/test_round4_snapshot_failure.js"),
+    ]
+    if pw_ok:
+        log("\n── Round4-P0-R1 精准修复测试 ──")
+        for name, rel in round4_r1_tests:
+            run_step(name, ["node", rel])
+    else:
+        for nm, _ in round4_r1_tests:
+            RESULTS.append((nm, False, 1, 0.0))
+            log(f"[FAIL] {nm}")
+            log("       跳过: Chromium 不可用")
+
     return finish(args.log_name)
 
 
@@ -333,9 +352,13 @@ def finish(log_name):
     log("=" * 62)
 
     # 分组汇报: 原始 27/27 (环境+骨架构建+原始 py/node+Round2/R1/R2) + Round3 + Round4
+    # 步骤索引 (RESULTS 0-based): 步骤 N = RESULTS[N-1]
+    #   原始 27 步 = 步骤 1-27   → RESULTS[0:27]
+    #   Round3  14 步 = 步骤 28-41 → RESULTS[27:41]
+    #   Round4  11 步 = 步骤 42-52 → RESULTS[41:52] (其中 42-48 为原 Round4-P0 7 项, 49-52 为 R1 精准修复 4 项)
     orig = RESULTS[:27]
-    round3 = RESULTS[27:42]   # 步骤 28-41 (14 项: 派生构建+2 派生 Python+9 Node+1 静态)
-    round4 = RESULTS[42:]     # 步骤 42-48 (7 项: 派生构建+5 Node+1 静态)
+    round3 = RESULTS[27:41]   # 步骤 28-41 (14 项: 派生构建+2 派生 Python+9 Node+1 静态)
+    round4 = RESULTS[41:]     # 步骤 42-52 (11 项: 派生构建+5 Node+1 静态 + R1 4 Node)
     orig_fail = sum(1 for _, ok, _, _ in orig if not ok)
     round3_fail = sum(1 for _, ok, _, _ in round3 if not ok)
     round4_fail = sum(1 for _, ok, _, _ in round4 if not ok)
@@ -362,12 +385,13 @@ def finish(log_name):
         grp("Round3 新增 Node 测试 32-40", round3[4:13])
         grp("Round3 静态扫描 41", round3[13:14])
     if round4:
-        log(f"Round4-P0 相关 {len(round4)} 步(派生构建+5 新增 Node 测试+1 静态扫描): "
+        log(f"Round4-P0 相关 {len(round4)} 步(派生构建+5 Node+1 静态 + R1 精准修复 4 Node): "
             f"{'全部通过' if round4_fail == 0 else str(round4_fail) + ' 项失败'} "
             f"({sum(1 for _, ok, _, _ in round4 if ok)}/{len(round4)})")
         grp("Round4-P0 派生构建 42", round4[0:1])
         grp("Round4-P0 新增 Node 测试 43-47", round4[1:6])
         grp("Round4-P0 静态扫描 48", round4[6:7])
+        grp("Round4-P0-R1 精准修复新增 Node 测试 49-52", round4[7:11])
 
     log("=" * 62)
     if failed == 0:
