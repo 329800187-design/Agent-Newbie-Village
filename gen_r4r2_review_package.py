@@ -287,8 +287,9 @@ TEST_MODE 无关的独立页面上下文运行, 不影响交付件 TEST_MODE=fal
     ]
     # 拷贝源码到 source/(含 round3 派生源 + 交付件副本 + fixtures 以保证可自重建)
     src_dir = os.path.join(BASE, "source")
-    if os.path.isdir(src_dir):
-        shutil.rmtree(src_dir)
+    # 注意: 不删除整个 source/ 目录(其中可能含仓库追踪的旧文件,
+    # 例如 *_dev.html / R1.2_VISUAL_*.json|md), 仅确保目录存在,
+    # 后续 shutil.copy 会覆盖同名文件, 其余追踪文件保持不动。
     os.makedirs(src_dir, exist_ok=True)
     for f in ["completion_transaction.js", "apply_round4.py",
               "R1.2_Round4_build_manifest.txt", ROUND4_HTML,
