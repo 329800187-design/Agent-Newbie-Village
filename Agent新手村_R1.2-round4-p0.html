@@ -4735,6 +4735,90 @@ Game.init();window.Game=Game;
   }
 
   /* ------------------------------------------------------------------
+   * 回滚验证辅助(§二/§三/§六): 递归深比较完整内存状态 + 持久化重读一致性 +
+   *   诊断哈希(仅诊断, 不独占比较, 不记录完整用户存档内容)。
+   * ------------------------------------------------------------------ */
+  function dhash(x) {
+    // FNV-1a 32-bit, 输出 8 位 hex; 仅用于诊断摘要
+    try {
+      var s = (typeof x === 'string') ? x : JSON.stringify(x);
+      if (s === undefined || s === null) s = 'null';
+      var h = 0x811c9dc5;
+      for (var i = 0; i < s.length; i++) {
+        h ^= s.charCodeAt(i);
+        h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+      }
+      return ('0000000' + h.toString(16)).slice(-8);
+    } catch (e) { return 'HASH_ERR'; }
+  }
+
+  // 递归深比较恢复后的完整内存状态(§二): 当前关完整状态 / 下一关完整状态 /
+  // State.currentLevel / State.totalStars / State.xp / State.achievements
+  // 注: unlocked 为派生字段, 由 _refreshUnlockedFlags 在回滚中确定性重算, 不纳入深比较
+  //     (否则重算后的 unlocked 会与快照中捕获的 unlocked 不一致, 误报内存回滚失败)。
+  function stripUnlocked(o) {
+    if (!o || typeof o !== 'object') return o;
+    var c = deepClone(o);
+    delete c.unlocked;
+    return c;
+  }
+  function verifyMemoryAgainstSnapshot(levelId, snap) {
+    try {
+      if (!deepEqual(stripUnlocked(State.levels[levelId]), stripUnlocked(snap.currentLevelState))) return false;
+      var next = nextCoreOf(levelId);
+      if (snap.affectedNextLevelState) {
+        if (!next || !State.levels[next]) return false;
+        if (!deepEqual(stripUnlocked(State.levels[next]), stripUnlocked(snap.affectedNextLevelState))) return false;
+      }
+      if (State.currentLevel !== snap.affectedGlobalFields.currentLevel) return false;
+      if (State.totalStars !== snap.affectedGlobalFields.totalStars) return false;
+      if (State.xp !== snap.affectedGlobalFields.xp) return false;
+      if (!deepEqual(State.achievements, snap.affectedGlobalFields.achievements)) return false;
+      return true;
+    } catch (e) {
+      R3D.record('CompletionTransaction.verifyMemory', e);
+      return false;
+    }
+  }
+
+  // 持久化写后重读一致性(§三): 存在则 actual===persistedSave; 不存在则 actual===null
+  function verifyPersistenceRestored(snap) {
+    if (typeof localStorage === 'undefined') return false;
+    var actual = localStorage.getItem('agent_village_d');
+    if (!snap.persistedSaveExists) {
+      return actual === null;
+    }
+    return actual === snap.persistedSave;
+  }
+
+  // 仅诊断用的不可变证据(§六): 记录预期/实际哈希, 不记录完整存档内容
+  function buildRollbackVerification(levelId, snap) {
+    var next = nextCoreOf(levelId);
+    var memExpected = {
+      currentLevelState: snap.currentLevelState,
+      affectedNextLevelState: snap.affectedNextLevelState,
+      affectedGlobalFields: snap.affectedGlobalFields
+    };
+    var memActual = {
+      currentLevelState: State.levels[levelId],
+      affectedNextLevelState: (next && State.levels[next]) ? State.levels[next] : null,
+      affectedGlobalFields: {
+        currentLevel: State.currentLevel,
+        totalStars: State.totalStars,
+        xp: State.xp,
+        achievements: State.achievements
+      }
+    };
+    var actualPersist = (typeof localStorage !== 'undefined') ? (localStorage.getItem('agent_village_d') || '') : '';
+    return {
+      memoryExpectedHash: dhash(memExpected),
+      memoryActualHash: dhash(memActual),
+      persistenceExpectedHash: dhash(snap.persistedSave || ''),
+      persistenceActualHash: dhash(actualPersist)
+    };
+  }
+
+  /* ------------------------------------------------------------------
    * 计算下一核心关（用于快照确定受影响字段）
    * ------------------------------------------------------------------ */
   function nextCoreOf(levelId) {
@@ -4743,7 +4827,11 @@ Game.init();window.Game=Game;
       var isCore = !!(meta && meta.type === 'core');
       if (!isCore || typeof getNextCoreLevel !== 'function') return null;
       return getNextCoreLevel(levelId);
-    } catch (e) { return null; }
+    } catch (e) {
+      // §五: 无法确定下一核心关 → 上抛, 不得静默吞异常(否则会创建缺下一关信息的快照)
+      R3D.record('CompletionTransaction.nextCoreOf', e);
+      throw e;
+    }
   }
 
   /* ------------------------------------------------------------------
@@ -4758,11 +4846,12 @@ Game.init();window.Game=Game;
       startedAt: null,
       committedAt: null,
       rolledBackAt: null,
-      status: 'idle',          // idle | committed | rendering | rolled_back | post_commit_error | rollback_persist_failed
+      status: 'idle',          // idle | committed | rolled_back | post_commit_error | rollback_failed | rollback_persist_failed
       commitPointReached: false,
       rollbackReason: null,
       snapshotFields: null,
       restoredFields: null,
+      rollbackVerification: null,   // §六: {memoryExpectedHash, memoryActualHash, persistenceExpectedHash, persistenceActualHash}
       snapshot: null
     };
   }
@@ -4860,27 +4949,51 @@ Game.init();window.Game=Game;
       }
 
       var snap = st.snapshot;
-      // 内存恢复
-      try {
-        if (snap.currentLevelState) {
-          State.levels[levelId] = deepClone(snap.currentLevelState);
-          result.memoryRestored = true;
-        }
-        var next = nextCoreOf(levelId);
-        if (snap.affectedNextLevelState && next && State.levels[next]) {
-          State.levels[next] = deepClone(snap.affectedNextLevelState);
-          result.memoryRestored = true;
-        }
-        if (snap.affectedGlobalFields) {
-          State.currentLevel = snap.affectedGlobalFields.currentLevel;
-          State.totalStars = snap.affectedGlobalFields.totalStars;
-          State.xp = snap.affectedGlobalFields.xp;
-          State.achievements = snap.affectedGlobalFields.achievements.slice();
-          result.memoryRestored = true;
-        }
-      } catch (e) { R3D.record('CompletionTransaction.rollback.memory', e); }
 
-      // 持久化恢复（精确恢复“存档不存在”）
+      // 直接内存恢复(闭包捕获 levelId / snap)
+      function restoreCurrentLevel() {
+        if (snap.currentLevelState) State.levels[levelId] = deepClone(snap.currentLevelState);
+      }
+      function restoreNextLevel() {
+        var nx = nextCoreOf(levelId);
+        if (snap.affectedNextLevelState && nx && State.levels[nx]) {
+          State.levels[nx] = deepClone(snap.affectedNextLevelState);
+        }
+      }
+      function restoreGlobalFields() {
+        State.currentLevel = snap.affectedGlobalFields.currentLevel;
+        State.totalStars = snap.affectedGlobalFields.totalStars;
+        State.xp = snap.affectedGlobalFields.xp;
+        State.achievements = snap.affectedGlobalFields.achievements.slice();
+      }
+      function refreshDerivedState() {
+        if (typeof _refreshUnlockedFlags === 'function') _refreshUnlockedFlags();
+      }
+
+      // ── 顺序(§四): 1)恢复直接内存 2)_refreshUnlockedFlags 3)验证完整内存 4)恢复持久化 5)重读验证持久化 ──
+      // §二: 禁止提前置 memoryRestored=true; 仅当 verifyMemoryAgainstSnapshot 通过才置位
+      var memoryOk = false;
+      try {
+        restoreCurrentLevel();
+        restoreNextLevel();
+        restoreGlobalFields();
+        // 2) 派生状态刷新(单独统计 derivedStateRefreshed)
+        try {
+          refreshDerivedState();
+          result.derivedStateRefreshed = true;
+        } catch (e3) {
+          result.derivedStateRefreshed = false;
+          R3D.record('CompletionTransaction.rollback.derived', e3);
+        }
+        // 3) 验证恢复后的完整内存状态(递归深比较)
+        memoryOk = verifyMemoryAgainstSnapshot(levelId, snap);
+      } catch (e) {
+        memoryOk = false;
+        R3D.record('CompletionTransaction.rollback.memory', e);
+      }
+      result.memoryRestored = memoryOk;
+
+      // ── 4) 恢复持久化 ──
       try {
         if (typeof localStorage !== 'undefined') {
           if (snap.persistedSaveExists) {
@@ -4890,16 +5003,28 @@ Game.init();window.Game=Game;
             localStorage.removeItem('agent_village_d');
           }
         }
-        result.persistenceRestored = true;
-      } catch (e2) { R3D.record('CompletionTransaction.rollback.persist', e2); }
+        // ── 5) 重读验证持久化(§三): 写后必须能重读出一致内容, 否则视为恢复失败 ──
+        var persistOk = verifyPersistenceRestored(snap);
+        if (!persistOk) {
+          // diagnostics 记录 expected/actual 摘要(不记录完整存档内容)
+          var actualRaw = (typeof localStorage !== 'undefined') ? localStorage.getItem('agent_village_d') : null;
+          R3D.record('CompletionTransaction.rollback.persist_verify',
+            'expectedExists=' + snap.persistedSaveExists +
+            ' expectedLen=' + (snap.persistedSave || '').length +
+            ' actualExists=' + (actualRaw !== null) +
+            ' actualLen=' + (actualRaw || '').length);
+        }
+        result.persistenceRestored = persistOk;
+      } catch (e2) {
+        result.persistenceRestored = false;
+        R3D.record('CompletionTransaction.rollback.persist', e2);
+      }
 
-      // 派生状态刷新
-      try {
-        if (typeof _refreshUnlockedFlags === 'function') _refreshUnlockedFlags();
-        result.derivedStateRefreshed = true;
-      } catch (e3) { R3D.record('CompletionTransaction.rollback.derived', e3); }
+      // ── §六 诊断哈希(仅诊断, 不独占比较, 不记录完整用户存档内容) ──
+      try { st.rollbackVerification = buildRollbackVerification(levelId, snap); }
+      catch (e4) { st.rollbackVerification = null; R3D.record('CompletionTransaction.rollback.verification', e4); }
 
-      // 终态判定：内存/持久化/派生任一失败 → 不得标记普通 rolled_back
+      // ── 终态判定: 内存/持久化/派生任一失败 → 不得标记普通 rolled_back ──
       if (result.memoryRestored && result.persistenceRestored && result.derivedStateRefreshed) {
         st.status = 'rolled_back';
       } else if (!result.persistenceRestored) {
@@ -4911,6 +5036,7 @@ Game.init();window.Game=Game;
       st.rollbackReason = String(error && error.message || error);
       st.restoredFields = { memory: result.memoryRestored, persistence: result.persistenceRestored, derived: result.derivedStateRefreshed };
       st.rolledBackAt = Date.now();
+      // §四: 只能依据最终状态验证, 不得依据"某一步执行过"判定成功
       result.success = result.memoryRestored && result.persistenceRestored && result.derivedStateRefreshed;
       if (!result.success) {
         // 提示用户重新加载
@@ -4936,8 +5062,16 @@ Game.init();window.Game=Game;
 
     finish: function (levelId) {
       var st = states[levelId];
-      if (!st) return;
-      if (st.commitPointReached) { st.phase = 'committed'; st.status = 'committed'; }
+      if (!st) return false;
+      if (!st.commitPointReached) return false;
+      // §一: post_commit_error 是粘性终态 —— 已提交但后续动作失败, 不得覆盖错误事实
+      if (st.status === 'post_commit_error') {
+        st.phase = 'post_commit_error';
+        return true;
+      }
+      st.phase = 'committed';
+      st.status = 'committed';
+      return true;
     },
 
     markPostCommitError: function (levelId, error) {
@@ -4945,9 +5079,9 @@ Game.init();window.Game=Game;
       if (!st) {
         st = states[levelId] = blankState(levelId);
       }
-      // 阶段 C 异常：不回滚已提交事务；仅记录诊断 + 标记状态
+      // §一: 阶段 C 异常 → 不回滚已提交事务; 仅记录诊断 + 标记粘性终态(不得用 rendering)
       st.status = 'post_commit_error';
-      st.phase = 'rendering';
+      st.phase = 'post_commit_error';
       st.rollbackReason = String(error && error.message || error);
       R3D.record('CompletionTransaction.post_commit_error', error);
     },
@@ -4955,7 +5089,8 @@ Game.init();window.Game=Game;
     getState: function (levelId) {
       var st = states[levelId];
       if (!st) return null;
-      return {
+      // §二/§六: 返回深拷贝, 外部修改不得污染内部事务状态(尤其 rollbackVerification 哈希证据)
+      return deepClone({
         levelId: st.levelId,
         phase: st.phase,
         startedAt: st.startedAt,
@@ -4965,8 +5100,9 @@ Game.init();window.Game=Game;
         commitPointReached: st.commitPointReached,
         rollbackReason: st.rollbackReason,
         snapshotFields: st.snapshotFields,
-        restoredFields: st.restoredFields
-      };
+        restoredFields: st.restoredFields,
+        rollbackVerification: st.rollbackVerification   // §六: 不可变证据(预期/实际哈希)
+      });
     },
 
     reset: function (levelId) {
@@ -5048,9 +5184,9 @@ Game.init();window.Game=Game;
     try {
       fn();
     } catch (e) {
-      // 单项失败：不回滚已提交事务，仅标记 post_commit_error 并继续其它相互独立动作
+      // 单项失败：不回滚已提交事务，仅标记粘性 post_commit_error 并继续其它相互独立动作
       var st = states[levelId];
-      if (st) { st.status = 'post_commit_error'; st.phase = 'rendering'; }
+      if (st) { st.status = 'post_commit_error'; st.phase = 'post_commit_error'; }
       R3D.record('CompletionTransaction.post_commit.' + scope, e);
     }
   }
