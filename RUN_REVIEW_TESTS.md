@@ -6,6 +6,9 @@
 ## 0. 环境要求
 - Python >= 3.10(用于 apply_round4.py / leveldata_hash.js 无需 python)
 - Node >= 18(运行浏览器测试)
+- **playwright-core 已安装**: 浏览器测试 `tests/_pw.js` 通过 `require('playwright-core')` 解析,
+  本包不内置 node_modules。请在解压后的包根目录先执行 `npm install playwright-core`
+  (或设置 `NODE_PATH` 指向含 playwright-core 的 node_modules 目录)。
 - Playwright Chromium 已安装: 设置环境变量 `PLAYWRIGHT_CHROMIUM_PATH` 指向
   `Google Chrome for Testing` 可执行文件; 或依赖 `_pw.js` 自动探测
   `~/Library/Caches/ms-playwright/chromium-*/.../Google Chrome for Testing`。
