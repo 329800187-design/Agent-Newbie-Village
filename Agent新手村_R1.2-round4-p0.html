@@ -4791,6 +4791,41 @@ Game.init();window.Game=Game;
     return actual === snap.persistedSave;
   }
 
+  // §二/§四: 派生解锁状态诊断(仅哈希 + 不匹配 ID, 不记录完整用户存档)
+  function buildDerivedVerification(snap) {
+    var expected = (snap && snap.derivedUnlockedState) ? snap.derivedUnlockedState : {};
+    var actual = captureDerivedUnlockedState();
+    var mismatchedIds = [];
+    Object.keys(expected).forEach(function (id) {
+      if (!!actual[id] !== !!expected[id]) mismatchedIds.push(id);
+    });
+    Object.keys(actual).forEach(function (id) {
+      if (!(id in expected) && !!actual[id]) mismatchedIds.push(id);
+    });
+    return {
+      expectedHash: dhash(expected),
+      actualHash: dhash(actual),
+      mismatchedIds: mismatchedIds
+    };
+  }
+
+  // §二: 捕获全量派生 unlocked 基线(遍历 LevelData, 不限于当前关或下一核心关)
+  function captureDerivedUnlockedState() {
+    var out = {};
+    var ids = (typeof LevelData !== 'undefined' && LevelData) ? Object.keys(LevelData) : [];
+    ids.forEach(function (id) {
+      out[id] = !!(State.levels[id] && State.levels[id].unlocked);
+    });
+    return out;
+  }
+
+  // §三: 派生状态必须经结果验证(刷新后完整 unlocked map 与快照深比较)
+  function verifyDerivedUnlockedState(snap) {
+    if (!snap || !snap.derivedUnlockedState) return false;
+    var actual = captureDerivedUnlockedState();
+    return deepEqual(actual, snap.derivedUnlockedState);
+  }
+
   // 仅诊断用的不可变证据(§六): 记录预期/实际哈希, 不记录完整存档内容
   function buildRollbackVerification(levelId, snap) {
     var next = nextCoreOf(levelId);
@@ -4810,11 +4845,15 @@ Game.init();window.Game=Game;
       }
     };
     var actualPersist = (typeof localStorage !== 'undefined') ? (localStorage.getItem('agent_village_d') || '') : '';
+    var dv = buildDerivedVerification(snap);
     return {
       memoryExpectedHash: dhash(memExpected),
       memoryActualHash: dhash(memActual),
       persistenceExpectedHash: dhash(snap.persistedSave || ''),
-      persistenceActualHash: dhash(actualPersist)
+      persistenceActualHash: dhash(actualPersist),
+      derivedExpectedHash: dv.expectedHash,
+      derivedActualHash: dv.actualHash,
+      derivedMismatchedLevelIds: dv.mismatchedIds
     };
   }
 
@@ -4838,6 +4877,9 @@ Game.init();window.Game=Game;
    * CompletionTransaction — 完成事务状态机
    * ------------------------------------------------------------------ */
   var states = {}; // levelId -> state 对象
+  // §五: 独立于普通事务状态的"生产安全锁"; 出现 rollback_failed / rollback_persist_failed 时写入,
+  //      阻止该关后续提交重试; reset() 不得清除; clearSubmissionBlockForTest() 仅供测试。
+  var unsafeLevels = {};
 
   function blankState(levelId) {
     return {
@@ -4885,7 +4927,8 @@ Game.init();window.Game=Game;
             achievements: State.achievements.slice()
           },
           persistedSave: rawSave,
-          persistedSaveExists: rawSave !== null
+          persistedSaveExists: rawSave !== null,
+          derivedUnlockedState: captureDerivedUnlockedState()
         };
       } catch (e) {
         // 不可序列化值 → 明确失败并阻止提交
@@ -4897,7 +4940,7 @@ Game.init();window.Game=Game;
       }
 
       st.snapshot = snap;
-      st.snapshotFields = ['currentLevelState', 'affectedNextLevelState', 'affectedGlobalFields', 'persistedSave'];
+      st.snapshotFields = ['currentLevelState', 'affectedNextLevelState', 'affectedGlobalFields', 'persistedSave', 'derivedUnlockedState'];
       return snap;
     },
 
@@ -4977,10 +5020,17 @@ Game.init();window.Game=Game;
         restoreCurrentLevel();
         restoreNextLevel();
         restoreGlobalFields();
-        // 2) 派生状态刷新(单独统计 derivedStateRefreshed)
+        // 2) 派生状态刷新(§三: _refreshUnlockedFlags 后必须与快照深比较, 一致才 derivedStateRefreshed=true)
         try {
-          refreshDerivedState();
-          result.derivedStateRefreshed = true;
+          if (typeof _refreshUnlockedFlags === 'function') _refreshUnlockedFlags();
+          result.derivedStateRefreshed = verifyDerivedUnlockedState(snap);
+          if (!result.derivedStateRefreshed) {
+            // 派生静默失败: 记录 expected/actual 哈希 + 不匹配 ID(不记录完整存档)
+            var dv0 = buildDerivedVerification(snap);
+            R3D.record('CompletionTransaction.rollback.derived_verify',
+              'expected=' + dv0.expectedHash + ' actual=' + dv0.actualHash +
+              ' mismatched=' + (dv0.mismatchedIds.join(',') || '(none)'));
+          }
         } catch (e3) {
           result.derivedStateRefreshed = false;
           R3D.record('CompletionTransaction.rollback.derived', e3);
@@ -5031,6 +5081,10 @@ Game.init();window.Game=Game;
         st.status = 'rollback_persist_failed';
       } else {
         st.status = 'rollback_failed';
+      }
+      // §五: 内存/持久化回滚失败 → 写入独立 unsafe 提交锁, 阻止该关后续重复提交重试
+      if (st.status === 'rollback_failed' || st.status === 'rollback_persist_failed') {
+        unsafeLevels[levelId] = { blocked: true, reason: st.status, createdAt: Date.now() };
       }
       st.phase = 'rolled_back';
       st.rollbackReason = String(error && error.message || error);
@@ -5106,8 +5160,27 @@ Game.init();window.Game=Game;
     },
 
     reset: function (levelId) {
+      // §六: reset 仅清理普通事务状态, 不得清除 unsafeLevels 生产安全锁
       if (levelId) delete states[levelId];
       else states = {};
+    },
+
+    // §五: 查询某关是否被安全锁阻止提交
+    isSubmissionBlocked: function (levelId) {
+      var b = unsafeLevels[levelId];
+      return !!(b && b.blocked);
+    },
+
+    // §五: 读取安全锁详情(深拷贝, 防止外部污染)
+    getSubmissionBlock: function (levelId) {
+      var b = unsafeLevels[levelId];
+      return b ? deepClone(b) : null;
+    },
+
+    // §六: 仅供测试显式调用, 生产流程 / TEST_MODE=false 绝不自动调用
+    clearSubmissionBlockForTest: function (levelId) {
+      if (levelId) delete unsafeLevels[levelId];
+      else unsafeLevels = {};
     }
   };
 
@@ -5223,6 +5296,19 @@ Game.init();window.Game=Game;
 
     Level.done = function () {
       var id = this.current;
+
+      // ── §五: 提交前拦截 — 若上一次事务失败未恢复(rollback_failed / rollback_persist_failed),
+      //        安全锁阻止该关任何提交重试, 必须重新加载页面(begin/snapshot/权威写入前)。
+      if (CompletionTransaction.isSubmissionBlocked(id)) {
+        this._completing = false;
+        R3D.record('CompletionTransaction.submission_blocked', new Error('检测到未恢复的事务失败，必须重新加载页面'));
+        if (typeof Game !== 'undefined' && Game && Game.toast) {
+          try { Game.toast('上一次提交未完整恢复，请重新加载页面后再试'); }
+          catch (e) { R3D.record('CompletionTransaction.submission_blocked.toast', e); }
+        }
+        return false;
+      }
+
       var lvl = (typeof LevelData !== 'undefined') ? LevelData[id] : null;
       var rep = (typeof LevelExperienceRegistry !== 'undefined') ? LevelExperienceRegistry[id] : null;
       var isR3 = !!(rep && (typeof Round3Levels !== 'undefined') && Round3Levels.indexOf(id) >= 0);
@@ -5310,10 +5396,13 @@ Game.init();window.Game=Game;
         // ── Round3 成功后续处理（复刻 round3 wrapper 成功分支）──
         try {
           if (IP && isR3) {
-            (rep.interactionSteps || []).forEach(function (s) { try { IP.complete(id, s.id); } catch (e) { R3D.record('r4.post.ip_complete', e); } });
-            if (IP.clearFailure) IP.clearFailure(id);
-            if (IP._refreshGate) IP._refreshGate(id);
-            if (EF && EF.clear) EF.clear(id);
+            // §八: Round3 成功后续处理统一走 post-commit 安全包装(任一失败 → 粘性 post_commit_error, 不回滚, 其余继续)
+            (rep.interactionSteps || []).forEach(function (s) {
+              safePostCommit(id, 'round3.ip_complete.' + s.id, function () { IP.complete(id, s.id); });
+            });
+            safePostCommit(id, 'round3.clearFailure', function () { if (IP.clearFailure) IP.clearFailure(id); });
+            safePostCommit(id, 'round3.refreshGate', function () { if (IP._refreshGate) IP._refreshGate(id); });
+            safePostCommit(id, 'round3.errorFeedbackClear', function () { if (EF && EF.clear) EF.clear(id); });
           }
         } catch (e) { R3D.record('r4.post.success', e); }
         return true;
