@@ -39,12 +39,13 @@ const NEXT = 'ai_camp_2';
       const results = [];
 
       function setup() {
-        F.clearAll(); CT.reset();
+        F.clearAll(); CT.reset(); CT.clearSubmissionBlockForTest(LEVEL);
         if (!State.levels[LEVEL]) State.levels[LEVEL] = {};
         if (!State.levels[NEXT]) State.levels[NEXT] = {};
         State.levels[LEVEL].completed = false;
         State.levels[LEVEL].stars = 0;
         State.levels[LEVEL].unlocked = true;
+        if (typeof _refreshUnlockedFlags === 'function') _refreshUnlockedFlags();
         State.levels[NEXT].completed = false;
         State.levels[NEXT].stars = 0;
         State.levels[NEXT].unlocked = false;

@@ -88,7 +88,7 @@ const NEXT = 'ai_camp_2';
         currentLevel: State.currentLevel,
         currentLevelBefore: curBefore,
         completing: Level._completing,
-        hasSnapshotFields: !!(cs && cs.snapshotFields && cs.snapshotFields.length === 4),
+        hasSnapshotFields: !!(cs && cs.snapshotFields && cs.snapshotFields.length === 5),
         committedAt: cs ? cs.committedAt : null
       };
 
@@ -125,7 +125,7 @@ const NEXT = 'ai_camp_2';
     rep.assert(lg.currentLevel === 'ai_camp_2' && lg.currentLevelBefore === 'ai_camp_1',
       `A. 首次完成推进 currentLevel: ai_camp_1→ai_camp_2 (before=${lg.currentLevelBefore}, after=${lg.currentLevel})`);
     rep.assert(lg.completing === false, `A. 提交锁已恢复 Level._completing === false (${lg.completing})`);
-    rep.assert(lg.hasSnapshotFields === true, `B. 快照字段集已记录 (4 项权威子集)`);
+    rep.assert(lg.hasSnapshotFields === true, `B. 快照字段集已记录 (5 项权威子集)`);
     rep.assert(typeof lg.committedAt === 'number' && lg.committedAt > 0, `B. committedAt 已赋值 (${lg.committedAt})`);
 
     const idm = out.idempotent;

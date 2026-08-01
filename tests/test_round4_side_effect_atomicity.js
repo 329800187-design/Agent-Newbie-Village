@@ -57,12 +57,13 @@ const W6_DRAFT_KEY = 'agent_village_w6_sim_draft';
       }
 
       function setupNormal(level) {
-        F.clearAll(); CT.reset();
+        F.clearAll(); CT.reset(); CT.clearSubmissionBlockForTest(level);
         clearSideEffectStores();
         if (!State.levels[level]) State.levels[level] = {};
         State.levels[level].completed = false;
         State.levels[level].stars = 0;
         State.levels[level].unlocked = true;
+        if (typeof _refreshUnlockedFlags === 'function') _refreshUnlockedFlags();
         State.currentLevel = level;
         State.xp = 0; State.totalStars = 0; State.achievements = [];
         Level.current = level; Level.hintN = 0; Level._completing = false;

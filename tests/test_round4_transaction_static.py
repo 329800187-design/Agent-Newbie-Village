@@ -12,10 +12,24 @@ import sys
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SRC = os.path.join(BASE, "completion_transaction.js")
-BUILD_HTML = os.path.join(BASE, "Agent新手村_R1.2-round4-p0.html")
-REFACTOR = os.path.join(BASE, "apply_round4.py")
-R3 = os.path.join(BASE, "round3_features.js")
+
+def resolve_source(name):
+    """§十一: 同时支持仓库结构(completion_transaction.js 在 BASE 根)
+    与审阅包结构(source/completion_transaction.js), 优先仓库根, 回退 source/。"""
+    candidates = [
+        os.path.join(BASE, name),
+        os.path.join(BASE, "source", name),
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+    raise FileNotFoundError(name)
+
+
+SRC = resolve_source("completion_transaction.js")
+BUILD_HTML = resolve_source("Agent新手村_R1.2-round4-p0.html")
+REFACTOR = resolve_source("apply_round4.py")
+R3 = resolve_source("round3_features.js")
 
 
 class Report:
@@ -189,6 +203,75 @@ def main():
         rep.assert_("_showCompletion: function" in html, "13c. 构建产物包含阶段C 重排 (_showCompletion)")
     else:
         rep.fail("13. 构建产物 Agent新手村_R1.2-round4-p0.html 不存在, 跳过注入标记校验")
+
+    # 21) §二 快照必须记录全量派生解锁基线 captureDerivedUnlockedState + snap.derivedUnlockedState
+    rep.assert_("function captureDerivedUnlockedState" in src,
+                "21a. captureDerivedUnlockedState 函数已定义(遍历 LevelData 捕获全量派生 unlocked)")
+    rep.assert_("derivedUnlockedState: captureDerivedUnlockedState()" in src,
+                "21b. 快照写入 snap.derivedUnlockedState(全量派生基线)")
+    rep.assert_("snapshotFields = ['currentLevelState', 'affectedNextLevelState', 'affectedGlobalFields', 'persistedSave', 'derivedUnlockedState']" in src,
+                "21c. snapshotFields 含 derivedUnlockedState")
+
+    # 22) §三 派生状态必须经结果验证
+    rep.assert_("function verifyDerivedUnlockedState" in src,
+                "22a. verifyDerivedUnlockedState 函数已定义")
+    rep.assert_("result.derivedStateRefreshed = verifyDerivedUnlockedState(snap);" in src,
+                "22b. 回滚在 _refreshUnlockedFlags 后必须与快照深比较, 一致才 derivedStateRefreshed=true")
+    rep.assert_("CompletionTransaction.rollback.derived_verify" in src,
+                "22c. 派生静默失败记录诊断(仅 expected/actual 哈希 + mismatched ids, 不记录完整存档)")
+
+    # 23) §四 回滚证据增加派生哈希
+    rep.assert_("derivedExpectedHash" in src and "derivedActualHash" in src and "derivedMismatchedLevelIds" in src,
+                "23. rollbackVerification 含派生哈希(derivedExpectedHash/derivedActualHash/derivedMismatchedLevelIds)")
+    rep.assert_("derivedMismatchedLevelIds: dv.mismatchedIds" in src,
+                "23b. getState 经 rollbackVerification 暴露 derivedMismatchedLevelIds(供测试断言 w1_p1)")
+
+    # 24) §五 不可覆盖的 unsafe 提交锁
+    rep.assert_("var unsafeLevels = {};" in src,
+                "24a. 定义独立 unsafeLevels 生产安全锁(与普通 states 分离)")
+    rep.assert_("isSubmissionBlocked: function" in src,
+                "24b. 公共方法 isSubmissionBlocked 已定义")
+    rep.assert_("getSubmissionBlock: function" in src,
+                "24c. 公共方法 getSubmissionBlock 已定义(深拷贝返回)")
+    i_unsafe_write = src.find("unsafeLevels[levelId] = { blocked: true")
+    rep.assert_(i_unsafe_write >= 0, "24d. rollback 在 rollback_failed/persist_failed 时写入 unsafeLevels 安全锁")
+    if i_unsafe_write >= 0:
+        cond_region = src[i_unsafe_write - 140:i_unsafe_write]
+        rep.assert_("rollback_failed' || st.status === 'rollback_persist_failed" in cond_region,
+                    "24e. 写入条件覆盖 rollback_failed 与 rollback_persist_failed 两种失败")
+
+    # 25) §五 Level.done 在提交前检查安全锁
+    rep.assert_("CompletionTransaction.isSubmissionBlocked(id)" in src,
+                "25a. Level.done 在门禁/begin/snapshot/权威写入前检查 isSubmissionBlocked")
+    rep.assert_("上一次提交未完整恢复，请重新加载页面后再试" in src,
+                "25b. 被阻止时提示重新加载页面(Game.toast)")
+
+    # 26) §六 reset 不得清除生产安全锁; begin 亦不得清除; 仅 clearSubmissionBlockForTest 清除
+    i_reset = src.find("reset: function (levelId) {")
+    i_isblock = src.find("isSubmissionBlocked: function")
+    rep.assert_(i_reset >= 0 and i_isblock > i_reset, "26a. 定位 reset 函数块(位于 isSubmissionBlocked 之前)")
+    if i_reset >= 0 and i_isblock > i_reset:
+        reset_region = src[i_reset:i_isblock]
+        rep.assert_("unsafeLevels[" not in reset_region and "unsafeLevels =" not in reset_region,
+                    "26b. reset() 函数体内不得清除/覆盖 unsafeLevels 生产安全锁(无 delete/赋值操作)")
+    i_begin = src.find("begin: function (levelId) {")
+    i_snap_fn = src.find("snapshot: function (levelId) {")
+    if i_begin >= 0 and i_snap_fn > i_begin:
+        begin_region = src[i_begin:i_snap_fn]
+        rep.assert_("unsafeLevels[" not in begin_region and "unsafeLevels =" not in begin_region,
+                    "26c. begin() 函数体内不得清除/覆盖 unsafeLevels 安全锁")
+    rep.assert_("clearSubmissionBlockForTest: function (levelId) {" in src,
+                "26d. 仅测试显式调用 clearSubmissionBlockForTest 清除安全锁(生产/TEST_MODE=false 不自动清理)")
+
+    # 27) §八 Round3 后处理统一走 post-commit 安全包装
+    rep.assert_("safePostCommit(id, 'round3.ip_complete.'" in src,
+                "27a. IP.complete 走 safePostCommit 包装(scope round3.ip_complete.<step>)")
+    rep.assert_("safePostCommit(id, 'round3.clearFailure'" in src,
+                "27b. IP.clearFailure 走 safePostCommit 包装(scope round3.clearFailure)")
+    rep.assert_("safePostCommit(id, 'round3.refreshGate'" in src,
+                "27c. IP._refreshGate 走 safePostCommit 包装(scope round3.refreshGate)")
+    rep.assert_("safePostCommit(id, 'round3.errorFeedbackClear'" in src,
+                "27d. EF.clear 走 safePostCommit 包装(scope round3.errorFeedbackClear)")
 
     return rep.finish()
 
