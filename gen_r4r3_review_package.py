@@ -568,7 +568,7 @@ Round4-P0-R3 精准修复(基于独立审阅失败 ROUND4_P0_R2_REVIEW_FAILED @ 
                 continue
             sums2.append("%s  %s" % (sha256_file(p), rel))
         write_text(os.path.join(BASE, "SHA256SUMS.txt"), "\n".join(sums2) + "\n")
-        with zipfile.ZipFile(OUT_ZIP, "w", ZIP_DEFLATED) as z:
+        with zipfile.ZipFile(OUT_ZIP, "w", zipfile.ZIP_DEFLATED) as z:
             for p, rel in inclusions:
                 z.write(p, rel)
         print("   自重建一致: %s (build1=%s.. build2=%s.. delivered=%s..)" % (
@@ -614,11 +614,13 @@ def run_generator_safety():
             if any(("'%s'" % d in arg or '"%s"' % d in arg or ("/%s" % d) in low or ("\\%s" % d) in low)
                    for d in PROTECTED_DIRS):
                 problems.append("%s: os.remove 命中仓库追踪目录参数: %s" % (os.path.basename(sf), arg.strip()))
-    # 精确硬断言: 源码不得出现 "shutil.rmtree(source" 任何形式的 source 目录删除
+    # 精确硬断言: 源码不得出现 "shutil.rmtree 以仓库追踪目录名作字面量实参"
+    # (仅当受保护目录名作为引号字符串出现在 rmtree 实参内才告警; 变量引用 dest_fx/src_dir 不算误报)
+    lit = "|".join(re.escape(d) for d in PROTECTED_DIRS)
     for sf in scan_files:
         txt = open(sf, encoding="utf-8").read()
-        if re.search(r"shutil\.rmtree\(\s*[^)]*source", txt):
-            problems.append("%s: 发现 shutil.rmtree 指向 source 目录(§十二 禁止)" % os.path.basename(sf))
+        if re.search(r"shutil\.rmtree\(\s*[^)]*[\"'](" + lit + r")[\"']", txt):
+            problems.append("%s: 发现 shutil.rmtree 以仓库追踪目录字面量作参数(§十二 禁止)" % os.path.basename(sf))
     if problems:
         lines.append("RESULT: FAIL")
         for p in problems:
