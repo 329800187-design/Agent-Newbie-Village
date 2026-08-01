@@ -13,6 +13,11 @@
     28-29 Round3 派生构建(夹具生成 + apply_round3.py)
     30-31 Round3 新增 Python 测试(2 项: 可复现构建 / 课程不变量)
     32-40 Round3 新增 Node 测试(9 项: 交互进度 / 错误反馈 / 9 关接入 / 实时进度 / 门禁 fail-closed / 答案不泄露 / 门禁缺失 / 完成态一致性 / 引擎真实提交门禁)
+    42-48 Round4-P0 派生构建 + 5 新增 Node 测试 + 1 静态扫描
+    49-52 Round4-P0-R1 精准修复新增 Node 测试(完整持久化校验 / 存档缺失还原 / 侧作用原子性 / 快照阶段捕获)
+    53-56 Round4-P0-R2 精准修复新增 Node 测试(post-commit 粘性 / 内存回滚验证 / 持久化回滚验证 / nextCoreOf 快照失败)
+    57-59 Round4-P0-R3 精准修复新增 Node 测试(派生解锁验证 / 回滚失败后提交阻断 / Round3 后处理异常)
+    60    Round4-P0-R3 精准修复新增静态扫描(unsafe 提交锁 / reset 不清除 / Round3 后处理安全包装)
 
 每项输出 [PASS]/[FAIL] + 退出码; 失败附最后 50 行日志。
 任何一项失败 → 本脚本退出码非 0; 全部成功 → 打印 ALL TESTS PASS。
@@ -293,6 +298,86 @@ def main():
     for name, rel in round3_py_static:
         run_step(name, [py, rel])
 
+    # ── 42 Round4-P0 派生构建(前置, 不依赖 Chromium) ──
+    log("\n── Round4-P0 派生构建(前置) ──")
+    run_step("42. Round4 派生构建 (apply_round4.py → round4-p0.html)", [py, "apply_round4.py"])
+
+    # ── 43-47 Round4-P0 新增 Node 测试(需 Chromium) ──
+    round4_tests = [
+        ("43. test_round4_completion_transaction.js", "tests/test_round4_completion_transaction.js"),
+        ("44. test_round4_transaction_rollback.js", "tests/test_round4_transaction_rollback.js"),
+        ("45. test_round4_commit_point.js", "tests/test_round4_commit_point.js"),
+        ("46. test_round4_post_commit_error.js", "tests/test_round4_post_commit_error.js"),
+        ("47. test_round4_persistence_failure.js", "tests/test_round4_persistence_failure.js"),
+    ]
+    if pw_ok:
+        log("\n── Round4-P0 新增 Node 测试(需 Chromium) ──")
+        for name, rel in round4_tests:
+            run_step(name, ["node", rel])
+    else:
+        for nm, _ in round4_tests:
+            RESULTS.append((nm, False, 1, 0.0))
+            log(f"[FAIL] {nm}")
+            log("       跳过: Chromium 不可用")
+
+    # ── 48 Round4-P0 静态扫描(不依赖 Chromium) ──
+    log("\n── Round4-P0 静态扫描 ──")
+    run_step("48. test_round4_transaction_static.py", [py, "tests/test_round4_transaction_static.py"])
+
+    # ── 49-52 Round4-P0-R1 精准修复新增测试(需 Chromium) ──
+    round4_r1_tests = [
+        ("49. test_round4_full_persisted_state.js", "tests/test_round4_full_persisted_state.js"),
+        ("50. test_round4_absent_save_restore.js", "tests/test_round4_absent_save_restore.js"),
+        ("51. test_round4_side_effect_atomicity.js", "tests/test_round4_side_effect_atomicity.js"),
+        ("52. test_round4_snapshot_failure.js", "tests/test_round4_snapshot_failure.js"),
+    ]
+    if pw_ok:
+        log("\n── Round4-P0-R1 精准修复测试 ──")
+        for name, rel in round4_r1_tests:
+            run_step(name, ["node", rel])
+    else:
+        for nm, _ in round4_r1_tests:
+            RESULTS.append((nm, False, 1, 0.0))
+            log(f"[FAIL] {nm}")
+            log("       跳过: Chromium 不可用")
+
+    # ── 53-56 Round4-P0-R2 精准修复新增测试(需 Chromium) ──
+    round4_r2_tests = [
+        ("53. test_round4_post_commit_status_sticky.js", "tests/test_round4_post_commit_status_sticky.js"),
+        ("54. test_round4_rollback_memory_verification.js", "tests/test_round4_rollback_memory_verification.js"),
+        ("55. test_round4_rollback_persistence_verification.js", "tests/test_round4_rollback_persistence_verification.js"),
+        ("56. test_round4_next_core_snapshot_failure.js", "tests/test_round4_next_core_snapshot_failure.js"),
+    ]
+    if pw_ok:
+        log("\n── Round4-P0-R2 精准修复测试 ──")
+        for name, rel in round4_r2_tests:
+            run_step(name, ["node", rel])
+    else:
+        for nm, _ in round4_r2_tests:
+            RESULTS.append((nm, False, 1, 0.0))
+            log(f"[FAIL] {nm}")
+            log("       跳过: Chromium 不可用")
+
+    # ── 57-59 Round4-P0-R3 精准修复新增 Node 测试(需 Chromium) ──
+    round4_r3_node_tests = [
+        ("57. test_round4_derived_unlock_verification.js", "tests/test_round4_derived_unlock_verification.js"),
+        ("58. test_round4_submission_block_after_rollback_failure.js", "tests/test_round4_submission_block_after_rollback_failure.js"),
+        ("59. test_round4_round3_post_commit_status.js", "tests/test_round4_round3_post_commit_status.js"),
+    ]
+    if pw_ok:
+        log("\n── Round4-P0-R3 精准修复 Node 测试 ──")
+        for name, rel in round4_r3_node_tests:
+            run_step(name, ["node", rel])
+    else:
+        for nm, _ in round4_r3_node_tests:
+            RESULTS.append((nm, False, 1, 0.0))
+            log(f"[FAIL] {nm}")
+            log("       跳过: Chromium 不可用")
+
+    # ── 60 Round4-P0-R3 精准修复新增静态扫描(不依赖 Chromium) ──
+    log("\n── Round4-P0-R3 精准修复静态扫描 ──")
+    run_step("60. test_round4_submission_block_static.py", [py, "tests/test_round4_submission_block_static.py"])
+
     return finish(args.log_name)
 
 
@@ -306,11 +391,17 @@ def finish(log_name):
             failed += 1
     log("=" * 62)
 
-    # 分组汇报: 原始 27/27 (环境+骨架构建+原始 py/node+Round2/R1/R2) + Round3 相关步骤
+    # 分组汇报: 原始 27/27 (环境+骨架构建+原始 py/node+Round2/R1/R2) + Round3 + Round4
+    # 步骤索引 (RESULTS 0-based): 步骤 N = RESULTS[N-1]
+    #   原始 27 步 = 步骤 1-27   → RESULTS[0:27]
+    #   Round3  14 步 = 步骤 28-41 → RESULTS[27:41]
+    #   Round4  19 步 = 步骤 42-60 → RESULTS[41:60] (42-48 原 Round4-P0 7 项, 49-52 为 R1 4 项, 53-56 为 R2 4 项, 57-59 为 R3 3 Node, 60 为 R3 静态)
     orig = RESULTS[:27]
-    round3 = RESULTS[27:]
+    round3 = RESULTS[27:41]   # 步骤 28-41 (14 项: 派生构建+2 派生 Python+9 Node+1 静态)
+    round4 = RESULTS[41:]     # 步骤 42-60 (19 项: 派生构建+5 Node+1 静态 + R1 4 Node + R2 4 Node + R3 3 Node + R3 1 静态)
     orig_fail = sum(1 for _, ok, _, _ in orig if not ok)
     round3_fail = sum(1 for _, ok, _, _ in round3 if not ok)
+    round4_fail = sum(1 for _, ok, _, _ in round4 if not ok)
     log(f"原始 27/27 测试组: {'全部通过' if orig_fail == 0 else str(orig_fail) + ' 项失败'} "
         f"({sum(1 for _, ok, _, _ in orig if ok)}/{len(orig)})")
     # 子分组(透明展示原始 27 的组成)
@@ -326,13 +417,24 @@ def finish(log_name):
     grp("Round2-R1 精准修复 25-26", RESULTS[24:26])
     grp("Round2-R2 阻断修复 27", RESULTS[26:27])
     if round3:
-        log(f"Round3 相关 {len(round3)} 步(夹具生成+派生构建+9 新增 Node 测试+1 静态扫描+2 派生 Python 测试): "
+        log(f"Round3 相关 {len(round3)} 步(夹具生成+派生构建+2 派生 Python+9 新增 Node 测试+1 静态扫描): "
             f"{'全部通过' if round3_fail == 0 else str(round3_fail) + ' 项失败'} "
             f"({sum(1 for _, ok, _, _ in round3 if ok)}/{len(round3)})")
         grp("Round3 派生构建 28-29", round3[:2])
         grp("Round3 新增 Python 测试 30-31", round3[2:4])
         grp("Round3 新增 Node 测试 32-40", round3[4:13])
         grp("Round3 静态扫描 41", round3[13:14])
+    if round4:
+        log(f"Round4-P0 相关 {len(round4)} 步(派生构建+5 Node+1 静态 + R1 4 Node + R2 4 Node + R3 3 Node + R3 1 静态): "
+            f"{'全部通过' if round4_fail == 0 else str(round4_fail) + ' 项失败'} "
+            f"({sum(1 for _, ok, _, _ in round4 if ok)}/{len(round4)})")
+        grp("Round4-P0 派生构建 42", round4[0:1])
+        grp("Round4-P0 新增 Node 测试 43-47", round4[1:6])
+        grp("Round4-P0 静态扫描 48", round4[6:7])
+        grp("Round4-P0-R1 精准修复新增 Node 测试 49-52", round4[7:11])
+        grp("Round4-P0-R2 精准修复新增 Node 测试 53-56", round4[11:15])
+        grp("Round4-P0-R3 精准修复新增 Node 测试 57-59", round4[15:18])
+        grp("Round4-P0-R3 精准修复静态扫描 60", round4[18:19])
 
     log("=" * 62)
     if failed == 0:
